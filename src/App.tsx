@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "./lib/supabase";
 import "./App.css";
 
-const MAX_LENGTH = 280;
+const MAX_LENGTH = 120;
 
 function App() {
   const [message, setMessage] = useState("");

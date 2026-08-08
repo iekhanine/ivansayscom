@@ -10,7 +10,7 @@ import "./Message.css";
 
 
 // ==========================================================
-// TYPES 001
+// MESSAGE 001 — TYPES
 // ==========================================================
 
 type DisplayedMessage = {
@@ -21,7 +21,7 @@ type DisplayedMessage = {
 
 
 // ==========================================================
-// COMPONENT 002
+// MESSAGE 002 — COMPONENT
 // ==========================================================
 
 function Message() {
@@ -33,7 +33,7 @@ function Message() {
 
 
   // ========================================================
-  // LOAD MESSAGE 003
+  // MESSAGE 003 — LOAD CURRENT DISPLAYED MESSAGE
   // ========================================================
 
   const loadDisplayedMessage =
@@ -74,16 +74,18 @@ function Message() {
 
 
   // ========================================================
-  // INITIAL LOAD 004
+  // MESSAGE 004 — INITIAL LOAD
   // ========================================================
 
   useEffect(() => {
+
     loadDisplayedMessage();
+
   }, [loadDisplayedMessage]);
 
 
   // ========================================================
-  // REALTIME 005
+  // MESSAGE 005 — SUPABASE REALTIME
   // ========================================================
 
   useEffect(() => {
@@ -112,7 +114,7 @@ function Message() {
 
 
   // ========================================================
-  // FALLBACK REFRESH 006
+  // MESSAGE 006 — FALLBACK REFRESH
   // ========================================================
 
   useEffect(() => {
@@ -132,55 +134,138 @@ function Message() {
 
 
   // ========================================================
-  // VIEW 007
+  // MESSAGE 007 — DYNAMIC MESSAGE SIZE
+  // ========================================================
+
+  const getMessageSize = (
+    message: string
+  ) => {
+
+    const length =
+      message.length;
+
+
+    if (length <= 40) {
+      return "short";
+    }
+
+
+    if (length <= 80) {
+      return "medium";
+    }
+
+
+    return "long";
+
+  };
+
+
+  // ========================================================
+  // MESSAGE 008 — VIEW
   // ========================================================
 
   return (
+
     <main className="obs-message-page">
 
-      {displayedMessage && (
 
-        <article
-          className="obs-message-card"
-          key={displayedMessage.id}
-        >
+      {/* ====================================================
+          INSTRUCTIONS 009 — ALWAYS VISIBLE
+          ==================================================== */}
 
-          <div className="obs-message-header">
+      <section className="obs-overlay-stack">
 
-            <span className="obs-prompt">
-              SOMEONE ON THE INTERNET SAID
-            </span>
 
-            <span className="obs-brand">
+        <article className="obs-instructions-card">
+
+          <div className="obs-instructions-content">
+
+            <div className="obs-instructions-url">
               IVANSAYS.COM
-            </span>
-
-          </div>
+            </div>
 
 
-          <div className="obs-message-text">
-            “{displayedMessage.message}”
-          </div>
-
-
-          <div className="obs-message-footer">
-
-            <span>
-              YOU TYPE IT.
-            </span>
-
-            <strong>
-              IVAN SAYS IT.
-            </strong>
+            <div className="obs-instructions-copy">
+              Type it. Send it. I'll say it live.
+            </div>
 
           </div>
 
         </article>
 
-      )}
+
+        {/* ==================================================
+            DISPLAY MESSAGE 010 — DYNAMIC
+            ================================================== */}
+
+        {displayedMessage && (
+
+          <article
+            className="obs-message-card"
+            key={displayedMessage.id}
+          >
+
+
+            {/* ==============================================
+                MESSAGE HEADER 011
+                ============================================== */}
+
+            <div className="obs-message-header">
+
+              <span className="obs-prompt">
+                SOMEONE ON THE INTERNET SAID
+              </span>
+
+              <span className="obs-brand">
+                IVANSAYS.COM
+              </span>
+
+            </div>
+
+
+            {/* ==============================================
+                MESSAGE BODY 012
+                ============================================== */}
+
+            <div
+              className={
+                `obs-message-text ${
+                  getMessageSize(
+                    displayedMessage.message
+                  )
+                }`
+              }
+            >
+              “{displayedMessage.message}”
+            </div>
+
+
+            {/* ==============================================
+                MESSAGE FOOTER 013
+                ============================================== */}
+
+            <div className="obs-message-footer">
+
+              <span>
+                YOU TYPE IT.
+              </span>
+
+              <strong>
+                IVAN SAYS IT.
+              </strong>
+
+            </div>
+
+          </article>
+
+        )}
+
+      </section>
 
     </main>
+
   );
+
 }
 
 

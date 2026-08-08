@@ -194,6 +194,101 @@ body,
   font-weight: 700;
 }
 
+/* ==========================================================
+   INSTRUCTIONS 006
+   Persistent IVANSAYS.COM call-to-action
+   ========================================================== */
+
+.obs-overlay-stack {
+  width: 100%;
+  max-width: 960px;
+
+  display: flex;
+  flex-direction: column;
+
+  /* Space between instructions and displayed message */
+  gap: 80px;
+}
+
+
+/* ==========================================================
+   INSTRUCTION CARD 007
+   ========================================================== */
+
+.obs-instructions-card {
+  width: 100%;
+
+  overflow: hidden;
+
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+
+  background: rgba(9, 9, 9, 0.96);
+  color: #f0f0ed;
+
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.55);
+}
+
+
+/* ==========================================================
+   INSTRUCTION HEADER 008
+   ========================================================== */
+
+.obs-instructions-kicker {
+  min-height: 54px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 28px;
+
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.1);
+
+  color: #666;
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  letter-spacing: 0.1em;
+}
+
+
+/* ==========================================================
+   INSTRUCTION CONTENT 009
+   ========================================================== */
+
+.obs-instructions-content {
+  padding: 26px 28px 30px;
+}
+
+
+.obs-instructions-url {
+  color: #f0f0ed;
+
+  font-size: 42px;
+  font-weight: 700;
+
+  line-height: 1;
+
+  letter-spacing: -0.035em;
+}
+
+
+.obs-instructions-copy {
+  margin-top: 14px;
+
+  color: #777;
+
+  font-size: 18px;
+  line-height: 1.4;
+}
 
 /* ==========================================================
    ANIMATION 006
