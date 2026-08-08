@@ -207,7 +207,7 @@ body,
   flex-direction: column;
 
   /* Space between instructions and displayed message */
-  gap: 80px;
+  gap: 10px;
 }
 
 
