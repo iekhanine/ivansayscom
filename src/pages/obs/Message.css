@@ -27,14 +27,12 @@ body,
   height: 100vh;
 
   display: flex;
-
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
 
-  padding: 48px;
+  padding: 80px;
 
   box-sizing: border-box;
-
   background: transparent;
 
   font-family:
@@ -51,23 +49,19 @@ body,
    ========================================================== */
 
 .obs-message-card {
-  width: min(900px, 100%);
+  width: 100%;
+  max-width: 960px;
 
   overflow: hidden;
 
-  border: 1px solid
-    rgba(255, 255, 255, 0.16);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
 
-  border-radius: 8px;
-
-  background:
-    rgba(9, 9, 9, 0.94);
-
+  background: rgba(9, 9, 9, 0.96);
   color: #f0f0ed;
 
   box-shadow:
-    0 24px 80px
-    rgba(0, 0, 0, 0.45);
+    0 30px 100px rgba(0, 0, 0, 0.55);
 
   animation:
     ivansays-message-in
@@ -81,27 +75,50 @@ body,
    ========================================================== */
 
 .obs-message-header {
-  min-height: 42px;
+  min-height: 64px;
 
   display: flex;
-
   align-items: center;
   justify-content: space-between;
 
   gap: 20px;
 
-  padding: 0 18px;
+  padding: 0 28px;
 
-  border-bottom: 1px solid
-    rgba(255, 255, 255, 0.09);
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.1);
 
   font-family:
     "SFMono-Regular",
     Consolas,
     monospace;
 
-  font-size: 9px;
+  font-size: 14px;
   font-weight: 700;
+
+  letter-spacing: 0.1em;
+}
+
+.obs-message-footer {
+  min-height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 28px;
+
+  border-top:
+    1px solid rgba(255, 255, 255, 0.1);
+
+  color: #666;
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 13px;
 
   letter-spacing: 0.1em;
 }
@@ -122,21 +139,20 @@ body,
    ========================================================== */
 
 .obs-message-text {
-  padding: 24px 26px 28px;
+  padding: 42px 42px 48px;
 
   color: #f0f0ed;
 
   font-size: clamp(
-    24px,
-    3vw,
-    42px
+    42px,
+    6vw,
+    68px
   );
 
-  font-weight: 500;
+  font-weight: 600;
 
-  line-height: 1.16;
-
-  letter-spacing: -0.03em;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
 
   overflow-wrap: anywhere;
 }
