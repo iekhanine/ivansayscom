@@ -1,0 +1,73 @@
+css
+/* ==========================================================
+   IVAN SAYS
+   OBS TEXT-ONLY OVERLAY
+   ========================================================== */
+
+
+/* ==========================================================
+   PAGE 001
+   ========================================================== */
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+
+  margin: 0;
+
+  overflow: hidden;
+
+  background: transparent !important;
+}
+
+
+/* ==========================================================
+   TEXT PAGE 002
+   ========================================================== */
+
+.obs-text-page {
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  padding: 40px;
+
+  background: transparent;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+
+/* ==========================================================
+   MESSAGE 003
+   ========================================================== */
+
+.obs-text {
+  width: 100%;
+
+  color: #ffffff;
+
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1.15;
+
+  text-align: center;
+
+  overflow-wrap: anywhere;
+
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.9);
+}
+

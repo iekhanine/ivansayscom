@@ -1,15 +1,23 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+
 import {
   BrowserRouter,
   Route,
   Routes,
 } from "react-router-dom";
-import Message from "./pages/obs/Message";
+
 import App from "./App";
 import Admin from "./pages/admin/Admin";
+import Message from "./pages/obs/Message";
+import Text from "./pages/obs/Text";
 
 import "./index.css";
+
+
+// ==========================================================
+// APPLICATION 001 — ROOT
+// ==========================================================
 
 createRoot(
   document.getElementById("root")!
@@ -17,20 +25,46 @@ createRoot(
   <StrictMode>
     <BrowserRouter>
       <Routes>
+
+        {/* ==================================================
+            HOME 002
+            ================================================== */}
+
         <Route
           path="/"
           element={<App />}
         />
+
+
+        {/* ==================================================
+            ADMIN 003
+            ================================================== */}
 
         <Route
           path="/admin"
           element={<Admin />}
         />
 
+
+        {/* ==================================================
+            OBS MESSAGE 004 — FULL OVERLAY
+            ================================================== */}
+
         <Route
-  path="/obs/message"
-  element={<Message />}
-/>
+          path="/obs/message"
+          element={<Message />}
+        />
+
+
+        {/* ==================================================
+            OBS TEXT 005 — TEXT ONLY
+            ================================================== */}
+
+        <Route
+          path="/obs/text"
+          element={<Text />}
+        />
+
       </Routes>
     </BrowserRouter>
   </StrictMode>
