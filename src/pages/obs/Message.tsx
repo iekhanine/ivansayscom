@@ -162,105 +162,29 @@ function Message() {
 
   // ========================================================
   // MESSAGE 008 — VIEW
+  // Text only. Visual container is provided by OBS overlay.
   // ========================================================
 
   return (
 
     <main className="obs-message-page">
 
+      {displayedMessage && (
 
-      {/* ====================================================
-          INSTRUCTIONS 009 — ALWAYS VISIBLE
-          ==================================================== */}
+        <div
+          className={
+            `obs-message-text ${
+              getMessageSize(
+                displayedMessage.message
+              )
+            }`
+          }
+          key={displayedMessage.id}
+        >
+          {displayedMessage.message}
+        </div>
 
-      <section className="obs-overlay-stack">
-
-
-        <article className="obs-instructions-card">
-
-          <div className="obs-instructions-content">
-
-            <div className="obs-instructions-url">
-              IVANSAYS.COM
-            </div>
-
-
-            <div className="obs-instructions-copy">
-              Type it. Send it. I'll say it live.
-            </div>
-
-          </div>
-
-        </article>
-
-
-        {/* ==================================================
-            DISPLAY MESSAGE 010 — DYNAMIC
-            ================================================== */}
-
-        {displayedMessage && (
-
-          <article
-            className="obs-message-card"
-            key={displayedMessage.id}
-          >
-
-
-            {/* ==============================================
-                MESSAGE HEADER 011
-                ============================================== */}
-
-            <div className="obs-message-header">
-
-              <span className="obs-prompt">
-                SOMEONE ON THE INTERNET SAID
-              </span>
-
-              <span className="obs-brand">
-                IVANSAYS.COM
-              </span>
-
-            </div>
-
-
-            {/* ==============================================
-                MESSAGE BODY 012
-                ============================================== */}
-
-            <div
-              className={
-                `obs-message-text ${
-                  getMessageSize(
-                    displayedMessage.message
-                  )
-                }`
-              }
-            >
-              “{displayedMessage.message}”
-            </div>
-
-
-            {/* ==============================================
-                MESSAGE FOOTER 013
-                ============================================== */}
-
-            <div className="obs-message-footer">
-
-              <span>
-                YOU TYPE IT.
-              </span>
-
-              <strong>
-                IVAN SAYS IT.
-              </strong>
-
-            </div>
-
-          </article>
-
-        )}
-
-      </section>
+      )}
 
     </main>
 
