@@ -48,12 +48,14 @@ function Text() {
 
 
       if (error) {
+
         console.error(
           "OBS text error:",
           error
         );
 
         return;
+
       }
 
 
@@ -61,8 +63,11 @@ function Text() {
         !data ||
         data.length === 0
       ) {
+
         setDisplayedMessage(null);
+
         return;
+
       }
 
 
@@ -100,14 +105,18 @@ function Text() {
           table: "submissions",
         },
         () => {
+
           loadDisplayedMessage();
+
         }
       )
       .subscribe();
 
 
     return () => {
+
       supabase.removeChannel(channel);
+
     };
 
   }, [loadDisplayedMessage]);
@@ -127,7 +136,9 @@ function Text() {
 
 
     return () => {
+
       window.clearInterval(interval);
+
     };
 
   }, [loadDisplayedMessage]);
@@ -135,27 +146,20 @@ function Text() {
 
   // ========================================================
   // TEXT 007 — VIEW
+  // JUST THE MESSAGE
   // ========================================================
 
   return (
 
-    <main className="obs-text-page">
+    <div className="obs-text">
 
-      {displayedMessage && (
+      {displayedMessage?.message ?? ""}
 
-        <div
-          className="obs-text"
-          key={displayedMessage.id}
-        >
-          {displayedMessage.message}
-        </div>
-
-      )}
-
-    </main>
+    </div>
 
   );
 
 }
+
 
 export default Text;
