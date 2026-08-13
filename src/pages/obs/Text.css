@@ -1,13 +1,31 @@
+/* ==========================================================
+   IVAN SAYS
+   OBS TEXT ONLY
+   ========================================================== */
+
+
+/* ==========================================================
+   PAGE 001
+   ========================================================== */
+
 html,
 body,
 #root {
   width: 100%;
   height: 100%;
+
   margin: 0;
   padding: 0;
 
+  overflow: hidden;
+
   background: transparent !important;
 }
+
+
+/* ==========================================================
+   TEXT PAGE 002
+   ========================================================== */
 
 .obs-text-page {
   width: 100%;
@@ -20,20 +38,40 @@ body,
   margin: 0;
   padding: 0;
 
+  overflow: hidden;
+
   background: transparent !important;
 }
+
+
+/* ==========================================================
+   MESSAGE 003
+   ONE LINE ONLY
+   ========================================================== */
 
 .obs-text {
   width: 100%;
 
-  color: white;
+  margin: 0;
+  padding: 0;
 
-  font-family: Arial, sans-serif;
+  color: #ffffff;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
   font-size: 200px;
   font-weight: 700;
   line-height: 1;
 
   text-align: center;
 
+  white-space: nowrap;
+
   background: transparent !important;
+
+  border: none;
+  box-shadow: none;
 }
