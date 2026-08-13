@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -30,6 +31,10 @@ function Text() {
     displayedMessage,
     setDisplayedMessage,
   ] = useState<DisplayedMessage | null>(null);
+
+
+  const textRef =
+    useRef<HTMLDivElement>(null);
 
 
   // ========================================================
@@ -145,17 +150,114 @@ function Text() {
 
 
   // ========================================================
-  // TEXT 007 — VIEW
-  // JUST THE MESSAGE
+  // TEXT 007 — AUTO FIT MESSAGE
+  // Keep the entire message on one line
+  // ========================================================
+
+  const fitText =
+    useCallback(() => {
+
+      const element =
+        textRef.current;
+
+
+      if (!element) {
+        return;
+      }
+
+
+      const parent =
+        element.parentElement;
+
+
+      if (!parent) {
+        return;
+      }
+
+
+      // Start intentionally large.
+      let fontSize = 200;
+
+
+      element.style.fontSize =
+        `${fontSize}px`;
+
+
+      // Shrink until the entire message fits.
+      while (
+        element.scrollWidth >
+          parent.clientWidth &&
+        fontSize > 20
+      ) {
+
+        fontSize -= 2;
+
+        element.style.fontSize =
+          `${fontSize}px`;
+
+      }
+
+    }, []);
+
+
+  // ========================================================
+  // TEXT 008 — REFIT WHEN MESSAGE CHANGES
+  // ========================================================
+
+  useEffect(() => {
+
+    fitText();
+
+
+    const handleResize = () => {
+
+      fitText();
+
+    };
+
+
+    window.addEventListener(
+      "resize",
+      handleResize
+    );
+
+
+    return () => {
+
+      window.removeEventListener(
+        "resize",
+        handleResize
+      );
+
+    };
+
+  }, [
+    displayedMessage,
+    fitText,
+  ]);
+
+
+  // ========================================================
+  // TEXT 009 — VIEW
   // ========================================================
 
   return (
 
-    <div className="obs-text">
+    <main className="obs-text-page">
 
-      {displayedMessage?.message ?? ""}
+      {displayedMessage && (
 
-    </div>
+        <div
+          ref={textRef}
+          className="obs-text"
+          key={displayedMessage.id}
+        >
+          {displayedMessage.message}
+        </div>
+
+      )}
+
+    </main>
 
   );
 
