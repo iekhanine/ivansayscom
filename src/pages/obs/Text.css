@@ -24,7 +24,7 @@ body,
 
 
 /* ==========================================================
-   TEXT PAGE 002
+   TEXT AREA 002
    ========================================================== */
 
 .obs-text-page {
@@ -40,9 +40,7 @@ body,
 
   margin: 0;
 
-  padding:
-    15px
-    20px;
+  padding: 10px 20px;
 
   overflow: hidden;
 
@@ -70,28 +68,27 @@ body,
     sans-serif;
 
   /*
-   * Actual font size is controlled automatically
-   * by Text.tsx.
+   * Text.tsx automatically changes this
+   * until the message fits inside the box.
    */
-  font-size: 220px;
+  font-size: 60px;
 
   font-weight: 700;
 
-  line-height: 1.05;
+  /*
+   * Enough room between lines to keep
+   * multi-line messages readable.
+   */
+  line-height: 1.15;
 
   text-align: center;
 
   /*
-   * IMPORTANT:
-   *
-   * Allow wrapping.
-   *
-   * Short messages remain one line.
-   * Longer messages become 2, 3, 4+ lines.
+   * Allow text to wrap naturally.
    */
   white-space: normal;
 
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
 
   word-break: normal;
 
@@ -103,5 +100,5 @@ body,
 
   text-shadow:
     0 2px 4px
-    rgba(0, 0, 0, 0.9);
+    rgba(0, 0, 0, 0.95);
 }
