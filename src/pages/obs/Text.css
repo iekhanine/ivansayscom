@@ -30,16 +30,14 @@ body,
   align-items: center;
   justify-content: center;
 
-  box-sizing: border-box;
-
   margin: 0;
-  padding: 10px 60px;
+  padding: 0;
+
+  box-sizing: border-box;
 
   overflow: hidden;
 
   background: transparent !important;
-
-  color: #ffffff !important;
 }
 
 
@@ -48,9 +46,10 @@ body,
    ========================================================== */
 
 .obs-text {
-  width: 100%;
+  width: calc(100% - 120px);
+  max-width: calc(100% - 120px);
 
-  margin: 0;
+  margin: 0 auto;
   padding: 0;
 
   box-sizing: border-box;
@@ -69,16 +68,10 @@ body,
   text-align: center;
 
   white-space: normal;
-  overflow-wrap: normal;
+  overflow-wrap: break-word;
   word-break: normal;
 
   background: transparent !important;
-
-  border: none !important;
-  box-shadow: none !important;
-
-  text-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.95);
 }
 
 
