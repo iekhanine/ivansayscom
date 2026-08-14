@@ -32,17 +32,15 @@ function Text() {
     setDisplayedMessage,
   ] = useState<DisplayedMessage | null>(null);
 
-
   const containerRef =
     useRef<HTMLElement>(null);
-
 
   const textRef =
     useRef<HTMLDivElement>(null);
 
 
   // ========================================================
-  // TEXT 003 — LOAD CURRENT DISPLAYED MESSAGE
+  // TEXT 003 — LOAD CURRENT MESSAGE
   // ========================================================
 
   const loadDisplayedMessage =
@@ -55,7 +53,6 @@ function Text() {
         "get_displayed_message"
       );
 
-
       if (error) {
 
         console.error(
@@ -64,9 +61,7 @@ function Text() {
         );
 
         return;
-
       }
-
 
       if (
         !data ||
@@ -76,9 +71,7 @@ function Text() {
         setDisplayedMessage(null);
 
         return;
-
       }
-
 
       setDisplayedMessage(
         data[0] as DisplayedMessage
@@ -121,7 +114,6 @@ function Text() {
       )
       .subscribe();
 
-
     return () => {
 
       supabase.removeChannel(
@@ -145,7 +137,6 @@ function Text() {
         3000
       );
 
-
     return () => {
 
       window.clearInterval(
@@ -158,10 +149,55 @@ function Text() {
 
 
   // ========================================================
-  // TEXT 007 — FIT TEXT TO WINDOW
+  // TEXT 007 — GET STARTING FONT SIZE
   //
-  // Finds the largest font size that fits inside the
-  // actual visible OBS browser window.
+  // More characters = smaller starting font.
+  // ========================================================
+
+  const getStartingFontSize =
+    useCallback((
+      message: string
+    ) => {
+
+      const length =
+        message.trim().length;
+
+
+      if (length <= 20) {
+        return 100;
+      }
+
+      if (length <= 40) {
+        return 80;
+      }
+
+      if (length <= 70) {
+        return 64;
+      }
+
+      if (length <= 100) {
+        return 52;
+      }
+
+      if (length <= 140) {
+        return 44;
+      }
+
+      if (length <= 180) {
+        return 38;
+      }
+
+      if (length <= 240) {
+        return 32;
+      }
+
+      return 28;
+
+    }, []);
+
+
+  // ========================================================
+  // TEXT 008 — FIT TEXT TO BOX
   // ========================================================
 
   const fitText =
@@ -173,10 +209,10 @@ function Text() {
       const text =
         textRef.current;
 
-
       if (
         !container ||
-        !text
+        !text ||
+        !displayedMessage
       ) {
         return;
       }
@@ -186,30 +222,26 @@ function Text() {
       // AVAILABLE SPACE
       // ----------------------------------------------------
 
-      const horizontalSafety = 24;
-      const verticalSafety = 10;
-
-
       const availableWidth =
-        container.clientWidth -
-        horizontalSafety;
+        container.clientWidth - 24;
 
       const availableHeight =
-        container.clientHeight -
-        verticalSafety;
-
-
-      if (
-        availableWidth <= 0 ||
-        availableHeight <= 0
-      ) {
-        return;
-      }
+        container.clientHeight - 12;
 
 
       // ----------------------------------------------------
-      // PREPARE TEXT BOX
+      // START SIZE BASED ON MESSAGE LENGTH
       // ----------------------------------------------------
+
+      let fontSize =
+        getStartingFontSize(
+          displayedMessage.message
+        );
+
+
+      const minimumFontSize =
+        12;
+
 
       text.style.width =
         `${availableWidth}px`;
@@ -217,81 +249,55 @@ function Text() {
       text.style.maxWidth =
         `${availableWidth}px`;
 
+      text.style.fontSize =
+        `${fontSize}px`;
+
 
       // ----------------------------------------------------
-      // BINARY SEARCH FONT SIZE
+      // SHRINK UNTIL EVERYTHING FITS
       // ----------------------------------------------------
-
-      let low = 10;
-      let high = 160;
-      let best = 10;
-
 
       while (
-        low <= high
+        fontSize >
+          minimumFontSize &&
+        (
+          text.scrollWidth >
+            availableWidth ||
+          text.scrollHeight >
+            availableHeight
+        )
       ) {
 
-        const size =
-          Math.floor(
-            (low + high) / 2
-          );
-
+        fontSize -= 1;
 
         text.style.fontSize =
-          `${size}px`;
-
-
-        const actualWidth =
-          text.scrollWidth;
-
-        const actualHeight =
-          text.scrollHeight;
-
-
-        const fits =
-          actualWidth <=
-            availableWidth &&
-          actualHeight <=
-            availableHeight;
-
-
-        if (fits) {
-
-          best = size;
-
-          low =
-            size + 1;
-
-        } else {
-
-          high =
-            size - 1;
-
-        }
+          `${fontSize}px`;
 
       }
 
 
       // ----------------------------------------------------
-      // FINAL SIZE
-      // Give OBS a tiny extra safety reduction.
+      // SMALL SAFETY BUFFER
       // ----------------------------------------------------
 
-      const finalSize =
+      fontSize =
         Math.max(
-          10,
-          best - 2
+          minimumFontSize,
+          fontSize - 1
         );
 
 
       text.style.fontSize =
-        `${finalSize}px`;
+        `${fontSize}px`;
 
-    }, []);
+    }, [
+      displayedMessage,
+      getStartingFontSize,
+    ]);
 
 
   // ========================================================
-  // TEXT 008 — FIT WHEN MESSAGE CHANGES
+  // TEXT 009 — FIT WHEN MESSAGE CHANGES
   // ========================================================
 
   useEffect(() => {
@@ -304,7 +310,6 @@ function Text() {
 
         }
       );
-
 
     return () => {
 
@@ -321,7 +326,7 @@ function Text() {
 
 
   // ========================================================
-  // TEXT 009 — FIT WHEN WINDOW CHANGES
+  // TEXT 010 — FIT WHEN WINDOW CHANGES
   // ========================================================
 
   useEffect(() => {
@@ -329,11 +334,9 @@ function Text() {
     const container =
       containerRef.current;
 
-
     if (!container) {
       return;
     }
-
 
     const observer =
       new ResizeObserver(
@@ -344,11 +347,9 @@ function Text() {
         }
       );
 
-
     observer.observe(
       container
     );
-
 
     return () => {
 
@@ -360,7 +361,7 @@ function Text() {
 
 
   // ========================================================
-  // TEXT 010 — VIEW
+  // TEXT 011 — VIEW
   // ========================================================
 
   return (
