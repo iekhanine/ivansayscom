@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useRef,
   useState,
 } from "react";
 
@@ -32,15 +31,9 @@ function Text() {
     setDisplayedMessage,
   ] = useState<DisplayedMessage | null>(null);
 
-  const containerRef =
-    useRef<HTMLElement>(null);
-
-  const textRef =
-    useRef<HTMLDivElement>(null);
-
 
   // ========================================================
-  // TEXT 003 — LOAD CURRENT MESSAGE
+  // TEXT 003 — LOAD CURRENT DISPLAYED MESSAGE
   // ========================================================
 
   const loadDisplayedMessage =
@@ -53,6 +46,7 @@ function Text() {
         "get_displayed_message"
       );
 
+
       if (error) {
 
         console.error(
@@ -61,7 +55,9 @@ function Text() {
         );
 
         return;
+
       }
+
 
       if (
         !data ||
@@ -71,7 +67,9 @@ function Text() {
         setDisplayedMessage(null);
 
         return;
+
       }
+
 
       setDisplayedMessage(
         data[0] as DisplayedMessage
@@ -114,6 +112,7 @@ function Text() {
       )
       .subscribe();
 
+
     return () => {
 
       supabase.removeChannel(
@@ -137,6 +136,7 @@ function Text() {
         3000
       );
 
+
     return () => {
 
       window.clearInterval(
@@ -149,234 +149,80 @@ function Text() {
 
 
   // ========================================================
-  // TEXT 007 — GET STARTING FONT SIZE
+  // TEXT 007 — FONT SIZE
   //
-  // More characters = smaller starting font.
+  // More text = smaller font.
+  // Nothing else controls the size.
   // ========================================================
 
-  const getStartingFontSize =
-    useCallback((
-      message: string
-    ) => {
+  const getFontSize = (
+    message: string
+  ) => {
 
-      const length =
-        message.trim().length;
-
-
-      if (length <= 20) {
-        return 100;
-      }
-
-      if (length <= 40) {
-        return 80;
-      }
-
-      if (length <= 70) {
-        return 64;
-      }
-
-      if (length <= 100) {
-        return 52;
-      }
-
-      if (length <= 140) {
-        return 44;
-      }
-
-      if (length <= 180) {
-        return 38;
-      }
-
-      if (length <= 240) {
-        return 32;
-      }
-
-      return 28;
-
-    }, []);
+    const length =
+      message.trim().length;
 
 
-  // ========================================================
-  // TEXT 008 — FIT TEXT TO BOX
-  // ========================================================
-
-  const fitText =
-    useCallback(() => {
-
-      const container =
-        containerRef.current;
-
-      const text =
-        textRef.current;
-
-      if (
-        !container ||
-        !text ||
-        !displayedMessage
-      ) {
-        return;
-      }
-
-
-      // ----------------------------------------------------
-      // AVAILABLE SPACE
-      // ----------------------------------------------------
-
-      const availableWidth =
-        container.clientWidth - 8;
-
-      const availableHeight =
-        container.clientHeight - 12;
-
-
-      // ----------------------------------------------------
-      // START SIZE BASED ON MESSAGE LENGTH
-      // ----------------------------------------------------
-
-      let fontSize =
-        getStartingFontSize(
-          displayedMessage.message
-        );
-
-
-      const minimumFontSize =
-        12;
-
-
-      text.style.width =
-        `${availableWidth}px`;
-
-      text.style.maxWidth =
-        `${availableWidth}px`;
-
-      text.style.fontSize =
-        `${fontSize}px`;
-
-
-      // ----------------------------------------------------
-      // SHRINK UNTIL EVERYTHING FITS
-      // ----------------------------------------------------
-
-      while (
-        fontSize >
-          minimumFontSize &&
-        (
-          text.scrollWidth >
-            availableWidth ||
-          text.scrollHeight >
-            availableHeight
-        )
-      ) {
-
-        fontSize -= 1;
-
-        text.style.fontSize =
-          `${fontSize}px`;
-
-      }
-
-
-      // ----------------------------------------------------
-      // SMALL SAFETY BUFFER
-      // ----------------------------------------------------
-
-      fontSize =
-        Math.max(
-          minimumFontSize,
-          fontSize - 1
-        );
-
-
-      text.style.fontSize =
-        `${fontSize}px`;
-
-    }, [
-      displayedMessage,
-      getStartingFontSize,
-    ]);
-
-
-  // ========================================================
-  // TEXT 009 — FIT WHEN MESSAGE CHANGES
-  // ========================================================
-
-  useEffect(() => {
-
-    const frame =
-      window.requestAnimationFrame(
-        () => {
-
-          fitText();
-
-        }
-      );
-
-    return () => {
-
-      window.cancelAnimationFrame(
-        frame
-      );
-
-    };
-
-  }, [
-    displayedMessage,
-    fitText,
-  ]);
-
-
-  // ========================================================
-  // TEXT 010 — FIT WHEN WINDOW CHANGES
-  // ========================================================
-
-  useEffect(() => {
-
-    const container =
-      containerRef.current;
-
-    if (!container) {
-      return;
+    if (length <= 20) {
+      return 110;
     }
 
-    const observer =
-      new ResizeObserver(
-        () => {
+    if (length <= 40) {
+      return 90;
+    }
 
-          fitText();
+    if (length <= 60) {
+      return 76;
+    }
 
-        }
-      );
+    if (length <= 80) {
+      return 66;
+    }
 
-    observer.observe(
-      container
-    );
+    if (length <= 100) {
+      return 58;
+    }
 
-    return () => {
+    if (length <= 130) {
+      return 50;
+    }
 
-      observer.disconnect();
+    if (length <= 160) {
+      return 44;
+    }
 
-    };
+    if (length <= 200) {
+      return 38;
+    }
 
-  }, [fitText]);
+    if (length <= 250) {
+      return 34;
+    }
+
+    return 30;
+
+  };
 
 
   // ========================================================
-  // TEXT 011 — VIEW
+  // TEXT 008 — VIEW
   // ========================================================
 
   return (
 
-    <main
-      ref={containerRef}
-      className="obs-text-page"
-    >
+    <main className="obs-text-page">
 
       {displayedMessage && (
 
         <div
-          ref={textRef}
           className="obs-text"
           key={displayedMessage.id}
+          style={{
+            fontSize:
+              `${getFontSize(
+                displayedMessage.message
+              )}px`,
+          }}
         >
           {displayedMessage.message}
         </div>
