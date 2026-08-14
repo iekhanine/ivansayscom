@@ -3,11 +3,6 @@
    OBS AUTO-FIT TEXT OVERLAY
    ========================================================== */
 
-
-/* ==========================================================
-   PAGE 001
-   ========================================================== */
-
 html,
 body,
 #root {
@@ -24,7 +19,7 @@ body,
 
 
 /* ==========================================================
-   TEXT AREA 002
+   TEXT AREA
    ========================================================== */
 
 .obs-text-page {
@@ -32,24 +27,24 @@ body,
   height: 100vh;
 
   display: flex;
-
   align-items: center;
   justify-content: center;
 
   box-sizing: border-box;
 
   margin: 0;
-
   padding: 10px 20px;
 
   overflow: hidden;
 
   background: transparent !important;
+
+  color: #ffffff !important;
 }
 
 
 /* ==========================================================
-   MESSAGE 003
+   MESSAGE
    ========================================================== */
 
 .obs-text {
@@ -60,45 +55,38 @@ body,
 
   box-sizing: border-box;
 
-  color: #ffffff;
+  color: #ffffff !important;
 
   font-family:
     Arial,
     Helvetica,
     sans-serif;
 
-  /*
-   * Text.tsx automatically changes this
-   * until the message fits inside the box.
-   */
   font-size: 60px;
-
   font-weight: 700;
-
-  /*
-   * Enough room between lines to keep
-   * multi-line messages readable.
-   */
   line-height: 1.15;
 
   text-align: center;
 
-  /*
-   * Allow text to wrap naturally.
-   */
   white-space: normal;
-
   overflow-wrap: normal;
-
   word-break: normal;
 
   background: transparent !important;
 
-  border: none;
-
-  box-shadow: none;
+  border: none !important;
+  box-shadow: none !important;
 
   text-shadow:
-    0 2px 4px
-    rgba(0, 0, 0, 0.95);
+    0 2px 4px rgba(0, 0, 0, 0.95);
+}
+
+
+/* ==========================================================
+   FORCE ALL CHILD TEXT WHITE
+   ========================================================== */
+
+.obs-text-page *,
+.obs-text * {
+  color: #ffffff !important;
 }
