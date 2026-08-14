@@ -3,6 +3,11 @@
    OBS AUTO-FIT TEXT OVERLAY
    ========================================================== */
 
+
+/* ==========================================================
+   PAGE 001
+   ========================================================== */
+
 html,
 body,
 #root {
@@ -19,7 +24,7 @@ body,
 
 
 /* ==========================================================
-   TEXT AREA
+   TEXT WINDOW 002
    ========================================================== */
 
 .obs-text-page {
@@ -27,13 +32,14 @@ body,
   height: 100vh;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
+  box-sizing: border-box;
+
   margin: 0;
   padding: 0;
-
-  box-sizing: border-box;
 
   overflow: hidden;
 
@@ -42,14 +48,15 @@ body,
 
 
 /* ==========================================================
-   MESSAGE
+   MESSAGE 003
    ========================================================== */
 
 .obs-text {
-  width: calc(100% - 120px);
-  max-width: calc(100% - 120px);
+  /*
+   * Width is calculated by Text.tsx.
+   */
 
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
 
   box-sizing: border-box;
@@ -61,25 +68,52 @@ body,
     Helvetica,
     sans-serif;
 
+  /*
+   * Text.tsx automatically controls this.
+   */
   font-size: 60px;
+
   font-weight: 700;
-  line-height: 1.15;
+
+  /*
+   * Enough separation for 2-4 lines
+   * without wasting vertical space.
+   */
+  line-height: 1.08;
 
   text-align: center;
 
+  /*
+   * Normal sentence wrapping.
+   */
   white-space: normal;
-  overflow-wrap: break-word;
+
+  overflow-wrap: normal;
+
   word-break: normal;
 
+  /*
+   * Do not clip the text element itself.
+   */
+  overflow: visible;
+
   background: transparent !important;
+
+  border: none;
+
+  box-shadow: none;
+
+  text-shadow:
+    0 2px 4px
+    rgba(0, 0, 0, 0.95);
 }
 
 
 /* ==========================================================
-   FORCE ALL CHILD TEXT WHITE
+   FORCE WHITE TEXT 004
    ========================================================== */
 
-.obs-text-page *,
+.obs-text,
 .obs-text * {
   color: #ffffff !important;
 }

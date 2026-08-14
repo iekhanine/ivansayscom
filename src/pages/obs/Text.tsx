@@ -33,6 +33,10 @@ function Text() {
   ] = useState<DisplayedMessage | null>(null);
 
 
+  const containerRef =
+    useRef<HTMLElement>(null);
+
+
   const textRef =
     useRef<HTMLDivElement>(null);
 
@@ -120,7 +124,9 @@ function Text() {
 
     return () => {
 
-      supabase.removeChannel(channel);
+      supabase.removeChannel(
+        channel
+      );
 
     };
 
@@ -142,89 +148,146 @@ function Text() {
 
     return () => {
 
-      window.clearInterval(interval);
+      window.clearInterval(
+        interval
+      );
 
     };
 
   }, [loadDisplayedMessage]);
 
 
- // ========================================================
-// TEXT 007 - FIT TEXT TO ACTUAL TEXT BOX
-// ========================================================
+  // ========================================================
+  // TEXT 007 — FIT TEXT TO WINDOW
+  //
+  // Finds the largest font size that fits inside the
+  // actual visible OBS browser window.
+  // ========================================================
 
-const fitText =
-  useCallback(() => {
+  const fitText =
+    useCallback(() => {
 
-    const text =
-      textRef.current;
+      const container =
+        containerRef.current;
 
-    if (!text) {
-      return;
-    }
-
-
-    // Start large
-    let fontSize = 160;
-
-    const minimumFontSize = 14;
-
-
-    text.style.fontSize =
-      `${fontSize}px`;
-
-
-    /*
-     * IMPORTANT:
-     * Check the text against ITS OWN dimensions.
-     *
-     * scrollWidth  = how much width the content needs
-     * clientWidth  = how much width it actually has
-     *
-     * scrollHeight = how much height the content needs
-     * clientHeight is NOT useful here because the element
-     * grows with the text.
-     *
-     * So vertical fitting is checked against the parent.
-     */
-
-    const parent =
-      text.parentElement;
-
-    if (!parent) {
-      return;
-    }
-
-
-    while (
-      fontSize > minimumFontSize
-    ) {
-
-      const tooWide =
-        text.scrollWidth >
-        text.clientWidth;
-
-      const tooTall =
-        text.scrollHeight >
-        parent.clientHeight;
+      const text =
+        textRef.current;
 
 
       if (
-        !tooWide &&
-        !tooTall
+        !container ||
+        !text
       ) {
-        break;
+        return;
       }
 
 
-      fontSize -= 2;
+      // ----------------------------------------------------
+      // AVAILABLE SPACE
+      // ----------------------------------------------------
+
+      const horizontalSafety = 24;
+      const verticalSafety = 10;
+
+
+      const availableWidth =
+        container.clientWidth -
+        horizontalSafety;
+
+      const availableHeight =
+        container.clientHeight -
+        verticalSafety;
+
+
+      if (
+        availableWidth <= 0 ||
+        availableHeight <= 0
+      ) {
+        return;
+      }
+
+
+      // ----------------------------------------------------
+      // PREPARE TEXT BOX
+      // ----------------------------------------------------
+
+      text.style.width =
+        `${availableWidth}px`;
+
+      text.style.maxWidth =
+        `${availableWidth}px`;
+
+
+      // ----------------------------------------------------
+      // BINARY SEARCH FONT SIZE
+      // ----------------------------------------------------
+
+      let low = 10;
+      let high = 160;
+      let best = 10;
+
+
+      while (
+        low <= high
+      ) {
+
+        const size =
+          Math.floor(
+            (low + high) / 2
+          );
+
+
+        text.style.fontSize =
+          `${size}px`;
+
+
+        const actualWidth =
+          text.scrollWidth;
+
+        const actualHeight =
+          text.scrollHeight;
+
+
+        const fits =
+          actualWidth <=
+            availableWidth &&
+          actualHeight <=
+            availableHeight;
+
+
+        if (fits) {
+
+          best = size;
+
+          low =
+            size + 1;
+
+        } else {
+
+          high =
+            size - 1;
+
+        }
+
+      }
+
+
+      // ----------------------------------------------------
+      // FINAL SIZE
+      // Give OBS a tiny extra safety reduction.
+      // ----------------------------------------------------
+
+      const finalSize =
+        Math.max(
+          10,
+          best - 2
+        );
+
 
       text.style.fontSize =
-        `${fontSize}px`;
+        `${finalSize}px`;
 
-    }
-
-  }, []);
+    }, []);
 
 
   // ========================================================
@@ -233,7 +296,6 @@ const fitText =
 
   useEffect(() => {
 
-    // Wait until browser has rendered the new text.
     const frame =
       window.requestAnimationFrame(
         () => {
@@ -259,30 +321,38 @@ const fitText =
 
 
   // ========================================================
-  // TEXT 009 — FIT WHEN BROWSER SOURCE RESIZES
+  // TEXT 009 — FIT WHEN WINDOW CHANGES
   // ========================================================
 
   useEffect(() => {
 
-    const handleResize = () => {
-
-      fitText();
-
-    };
+    const container =
+      containerRef.current;
 
 
-    window.addEventListener(
-      "resize",
-      handleResize
+    if (!container) {
+      return;
+    }
+
+
+    const observer =
+      new ResizeObserver(
+        () => {
+
+          fitText();
+
+        }
+      );
+
+
+    observer.observe(
+      container
     );
 
 
     return () => {
 
-      window.removeEventListener(
-        "resize",
-        handleResize
-      );
+      observer.disconnect();
 
     };
 
@@ -295,7 +365,10 @@ const fitText =
 
   return (
 
-    <main className="obs-text-page">
+    <main
+      ref={containerRef}
+      className="obs-text-page"
+    >
 
       {displayedMessage && (
 
