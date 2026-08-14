@@ -151,7 +151,11 @@ function Text() {
 
   // ========================================================
   // TEXT 007 — AUTO FIT MESSAGE
-  // Keep the entire message on one line
+  //
+  // Start with very large text.
+  // Allow normal wrapping.
+  // Reduce font size until the entire message fits
+  // inside BOTH the width and height of the OBS browser.
   // ========================================================
 
   const fitText =
@@ -175,22 +179,32 @@ function Text() {
       }
 
 
-      // Start intentionally large.
-      let fontSize = 200;
+      // Start huge.
+      let fontSize = 220;
+
+
+      // Minimum readable size.
+      const minimumFontSize = 24;
 
 
       element.style.fontSize =
         `${fontSize}px`;
 
 
-      // Shrink until the entire message fits.
+      // Shrink until everything fits.
       while (
-        element.scrollWidth >
-          parent.clientWidth &&
-        fontSize > 20
+        (
+          element.scrollWidth >
+            parent.clientWidth ||
+          element.scrollHeight >
+            parent.clientHeight
+        ) &&
+        fontSize >
+          minimumFontSize
       ) {
 
         fontSize -= 2;
+
 
         element.style.fontSize =
           `${fontSize}px`;
@@ -201,13 +215,41 @@ function Text() {
 
 
   // ========================================================
-  // TEXT 008 — REFIT WHEN MESSAGE CHANGES
+  // TEXT 008 — FIT WHEN MESSAGE CHANGES
   // ========================================================
 
   useEffect(() => {
 
-    fitText();
+    // Wait until browser has rendered the new text.
+    const frame =
+      window.requestAnimationFrame(
+        () => {
 
+          fitText();
+
+        }
+      );
+
+
+    return () => {
+
+      window.cancelAnimationFrame(
+        frame
+      );
+
+    };
+
+  }, [
+    displayedMessage,
+    fitText,
+  ]);
+
+
+  // ========================================================
+  // TEXT 009 — FIT WHEN BROWSER SOURCE RESIZES
+  // ========================================================
+
+  useEffect(() => {
 
     const handleResize = () => {
 
@@ -231,14 +273,11 @@ function Text() {
 
     };
 
-  }, [
-    displayedMessage,
-    fitText,
-  ]);
+  }, [fitText]);
 
 
   // ========================================================
-  // TEXT 009 — VIEW
+  // TEXT 010 — VIEW
   // ========================================================
 
   return (

@@ -1,6 +1,11 @@
 /* ==========================================================
    IVAN SAYS
-   OBS TEXT OVERLAY
+   OBS AUTO-FIT TEXT OVERLAY
+   ========================================================== */
+
+
+/* ==========================================================
+   PAGE 001
    ========================================================== */
 
 html,
@@ -19,7 +24,7 @@ body,
 
 
 /* ==========================================================
-   TEXT PAGE
+   TEXT PAGE 002
    ========================================================== */
 
 .obs-text-page {
@@ -27,12 +32,17 @@ body,
   height: 100vh;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
   box-sizing: border-box;
 
-  padding: 10px 20px;
+  margin: 0;
+
+  padding:
+    15px
+    20px;
 
   overflow: hidden;
 
@@ -41,31 +51,57 @@ body,
 
 
 /* ==========================================================
-   MESSAGE
+   MESSAGE 003
    ========================================================== */
 
 .obs-text {
-  display: inline-block;
+  width: 100%;
 
   margin: 0;
   padding: 0;
 
+  box-sizing: border-box;
+
   color: #ffffff;
 
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 100px;
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  /*
+   * Actual font size is controlled automatically
+   * by Text.tsx.
+   */
+  font-size: 220px;
+
   font-weight: 700;
-  line-height: 1;
+
+  line-height: 1.05;
 
   text-align: center;
 
-  white-space: nowrap;
+  /*
+   * IMPORTANT:
+   *
+   * Allow wrapping.
+   *
+   * Short messages remain one line.
+   * Longer messages become 2, 3, 4+ lines.
+   */
+  white-space: normal;
+
+  overflow-wrap: break-word;
+
+  word-break: normal;
 
   background: transparent !important;
 
   border: none;
+
   box-shadow: none;
 
   text-shadow:
-    0 3px 6px rgba(0, 0, 0, 0.95);
+    0 2px 4px
+    rgba(0, 0, 0, 0.9);
 }
