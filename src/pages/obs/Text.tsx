@@ -223,7 +223,7 @@ function Text() {
       // ----------------------------------------------------
 
       const availableWidth =
-        container.clientWidth - 24;
+        container.clientWidth - 8;
 
       const availableHeight =
         container.clientHeight - 12;
