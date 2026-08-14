@@ -24,7 +24,7 @@ body,
 
 
 /* ==========================================================
-   TEXT WINDOW 002
+   TEXT AREA 002
    ========================================================== */
 
 .obs-text-page {
@@ -52,9 +52,8 @@ body,
    ========================================================== */
 
 .obs-text {
-  /*
-   * Width is calculated by Text.tsx.
-   */
+  width: 100%;
+  max-width: 100%;
 
   margin: 0;
   padding: 0;
@@ -68,44 +67,24 @@ body,
     Helvetica,
     sans-serif;
 
-  /*
-   * Text.tsx automatically controls this.
-   */
   font-size: 60px;
-
   font-weight: 700;
 
-  /*
-   * Enough separation for 2-4 lines
-   * without wasting vertical space.
-   */
-  line-height: 1.08;
+  line-height: 1.05;
 
   text-align: center;
 
-  /*
-   * Normal sentence wrapping.
-   */
   white-space: normal;
 
   overflow-wrap: normal;
-
   word-break: normal;
 
-  /*
-   * Do not clip the text element itself.
-   */
   overflow: visible;
 
   background: transparent !important;
 
-  border: none;
-
+  border: 0;
   box-shadow: none;
-
-  text-shadow:
-    0 2px 4px
-    rgba(0, 0, 0, 0.95);
 }
 
 
