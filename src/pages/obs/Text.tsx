@@ -149,69 +149,82 @@ function Text() {
   }, [loadDisplayedMessage]);
 
 
-  // ========================================================
-  // TEXT 007 — AUTO FIT MESSAGE
-  //
-  // Start with very large text.
-  // Allow normal wrapping.
-  // Reduce font size until the entire message fits
-  // inside BOTH the width and height of the OBS browser.
-  // ========================================================
+ // ========================================================
+// TEXT 007 - FIT TEXT TO ACTUAL TEXT BOX
+// ========================================================
 
-  const fitText =
-    useCallback(() => {
+const fitText =
+  useCallback(() => {
 
-      const element =
-        textRef.current;
+    const text =
+      textRef.current;
+
+    if (!text) {
+      return;
+    }
 
 
-      if (!element) {
-        return;
+    // Start large
+    let fontSize = 160;
+
+    const minimumFontSize = 14;
+
+
+    text.style.fontSize =
+      `${fontSize}px`;
+
+
+    /*
+     * IMPORTANT:
+     * Check the text against ITS OWN dimensions.
+     *
+     * scrollWidth  = how much width the content needs
+     * clientWidth  = how much width it actually has
+     *
+     * scrollHeight = how much height the content needs
+     * clientHeight is NOT useful here because the element
+     * grows with the text.
+     *
+     * So vertical fitting is checked against the parent.
+     */
+
+    const parent =
+      text.parentElement;
+
+    if (!parent) {
+      return;
+    }
+
+
+    while (
+      fontSize > minimumFontSize
+    ) {
+
+      const tooWide =
+        text.scrollWidth >
+        text.clientWidth;
+
+      const tooTall =
+        text.scrollHeight >
+        parent.clientHeight;
+
+
+      if (
+        !tooWide &&
+        !tooTall
+      ) {
+        break;
       }
 
 
-      const parent =
-        element.parentElement;
+      fontSize -= 2;
 
-
-      if (!parent) {
-        return;
-      }
-
-
-      // Start huge.
-      let fontSize = 220;
-
-
-      // Minimum readable size.
-      const minimumFontSize = 24;
-
-
-      element.style.fontSize =
+      text.style.fontSize =
         `${fontSize}px`;
 
+    }
 
-      // Shrink until everything fits.
-      while (
-        (
-          element.scrollWidth >
-            parent.clientWidth ||
-          element.scrollHeight >
-            parent.clientHeight
-        ) &&
-        fontSize >
-          minimumFontSize
-      ) {
-
-        fontSize -= 2;
-
-
-        element.style.fontSize =
-          `${fontSize}px`;
-
-      }
-
-    }, []);
+  }, []);
 
 
   // ========================================================
