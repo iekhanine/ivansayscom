@@ -1,13 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
-
 /* ==========================================================
    IVAN SAYS
-   OBS TRANSPARENT TEXT OVERLAY
+   OBS TEXT-ONLY OVERLAY
+   Transparent browser source
    ========================================================== */
 
 
 /* ==========================================================
-   PAGE 001 — COMPLETELY TRANSPARENT
+   PAGE 001
    ========================================================== */
 
 html,
@@ -17,75 +16,129 @@ body,
   height: 100%;
 
   margin: 0;
-  padding: 0;
-
-  background: transparent !important;
 
   overflow: hidden;
+
+  background: transparent !important;
+}
+
+
+* {
+  box-sizing: border-box;
 }
 
 
 /* ==========================================================
-   TEXT SPACE 002
+   TEXT PAGE 002
    ========================================================== */
 
 .obs-text-page {
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  background: transparent !important;
+}
+
+
+/* ==========================================================
+   QUOTE WRAPPER 003
+   ========================================================== */
+
+.obs-quote {
+  position: relative;
+
   width: 100%;
   height: 100%;
 
-  margin: 0;
-  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  box-sizing: border-box;
-
-  background: transparent !important;
+  padding:
+    90px 80px;
 
   overflow: hidden;
+
+  background: transparent;
 }
 
 
 /* ==========================================================
-   TEXT 003
+   MESSAGE 004
+   Same typography as the quote panel in Live.css
    ========================================================== */
 
 .obs-text {
+  position: relative;
+
+  z-index: 2;
+
   width: 100%;
+  max-width: 900px;
 
-  margin: 0;
-  padding: 0;
+  color: #f6f6f3;
 
-  box-sizing: border-box;
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
 
-  color: #ffffff !important;
+  font-size: 55px;
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -1.6px;
 
-  background: transparent !important;
+  text-align: center;
 
-font-family: "Patrick Hand", Arial, sans-serif;
-font-weight: 400;
-
-  font-weight: 700;
-
-  line-height: 1.08;
-
-  text-align: left;
-
-  white-space: normal;
-
-  overflow-wrap: break-word;
-
+  overflow-wrap: anywhere;
   word-break: normal;
 
-  border: none;
-
-  box-shadow: none;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.90);
 }
 
 
 /* ==========================================================
-   FORCE WHITE 004
+   QUOTATION MARKS 005
    ========================================================== */
 
-.obs-text,
-.obs-text * {
-  color: #ffffff !important;
+.obs-quote-mark {
+  position: absolute;
+
+  z-index: 1;
+
+  color:
+    rgba(255, 255, 255, 0.18);
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 150px;
+  font-weight: 400;
+  line-height: 1;
+
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.55);
+
+  pointer-events: none;
+}
+
+
+.obs-quote-mark-open {
+  top: 32px;
+  left: 34px;
+}
+
+
+.obs-quote-mark-close {
+  right: 34px;
+  bottom: -16px;
 }

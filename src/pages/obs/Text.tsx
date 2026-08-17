@@ -4,14 +4,22 @@ import {
   useState,
 } from "react";
 
-import { supabase } from "../../lib/supabase";
+import {
+  supabase,
+} from "../../lib/supabase";
 
 import "./Text.css";
 
 
-// ==========================================================
-// TEXT 001 — TYPES
-// ==========================================================
+/* ==========================================================
+   IVAN SAYS
+   OBS TEXT OVERLAY
+   ========================================================== */
+
+
+/* ==========================================================
+   TEXT 001 - TYPES
+   ========================================================== */
 
 type DisplayedMessage = {
   id: string;
@@ -20,11 +28,11 @@ type DisplayedMessage = {
 };
 
 
-// ==========================================================
-// TEXT 002 — COMPONENT
-// ==========================================================
+/* ==========================================================
+   TEXT 002 - COMPONENT
+   ========================================================== */
 
-function Text() {
+export default function Text() {
 
   const [
     displayedMessage,
@@ -32,9 +40,9 @@ function Text() {
   ] = useState<DisplayedMessage | null>(null);
 
 
-  // ========================================================
-  // TEXT 003 — LOAD CURRENT DISPLAYED MESSAGE
-  // ========================================================
+  /* ========================================================
+     TEXT 003 - LOAD CURRENT DISPLAYED MESSAGE
+     ======================================================== */
 
   const loadDisplayedMessage =
     useCallback(async () => {
@@ -55,185 +63,133 @@ function Text() {
         );
 
         return;
-
       }
 
 
-      if (
-        !data ||
-        data.length === 0
-      ) {
+      const message =
+        Array.isArray(data)
+          ? data[0]
+          : data;
+
+
+      if (!message) {
 
         setDisplayedMessage(null);
 
         return;
-
       }
 
 
-      setDisplayedMessage(
-        data[0] as DisplayedMessage
-      );
+      setDisplayedMessage({
+        id: message.id,
+        message: message.message,
+        displayed_at:
+          message.displayed_at ?? null,
+      });
 
     }, []);
 
 
-  // ========================================================
-  // TEXT 004 — INITIAL LOAD
-  // ========================================================
+  /* ========================================================
+     TEXT 004 - INITIAL LOAD
+     ======================================================== */
 
   useEffect(() => {
 
     loadDisplayedMessage();
 
-  }, [loadDisplayedMessage]);
+  }, [
+    loadDisplayedMessage,
+  ]);
 
 
-  // ========================================================
-  // TEXT 005 — SUPABASE REALTIME
-  // ========================================================
+  /* ========================================================
+     TEXT 005 - REALTIME REFRESH
+     ======================================================== */
 
   useEffect(() => {
 
-    const channel = supabase
-      .channel("ivansays-obs-text")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "submissions",
-        },
-        () => {
+    const channel =
+      supabase
+        .channel(
+          "obs-text-overlay"
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "submissions",
+          },
+          () => {
 
-          loadDisplayedMessage();
+            loadDisplayedMessage();
 
-        }
-      )
-      .subscribe();
+          }
+        )
+        .subscribe();
 
 
     return () => {
 
-      supabase.removeChannel(
-        channel
-      );
+      supabase
+        .removeChannel(
+          channel
+        );
 
     };
 
-  }, [loadDisplayedMessage]);
+  }, [
+    loadDisplayedMessage,
+  ]);
 
 
-  // ========================================================
-  // TEXT 006 — FALLBACK REFRESH
-  // ========================================================
-
-  useEffect(() => {
-
-    const interval =
-      window.setInterval(
-        loadDisplayedMessage,
-        3000
-      );
-
-
-    return () => {
-
-      window.clearInterval(
-        interval
-      );
-
-    };
-
-  }, [loadDisplayedMessage]);
-
-
-  // ========================================================
-  // TEXT 007 — FONT SIZE
-  //
-  // More text = smaller font.
-  // Nothing else controls the size.
-  // ========================================================
-
-  const getFontSize = (
-    message: string
-  ) => {
-
-    const length =
-      message.trim().length;
-
-
-    if (length <= 20) {
-      return 110;
-    }
-
-    if (length <= 40) {
-      return 90;
-    }
-
-    if (length <= 60) {
-      return 76;
-    }
-
-    if (length <= 80) {
-      return 66;
-    }
-
-    if (length <= 100) {
-      return 58;
-    }
-
-    if (length <= 130) {
-      return 50;
-    }
-
-    if (length <= 160) {
-      return 44;
-    }
-
-    if (length <= 200) {
-      return 38;
-    }
-
-    if (length <= 250) {
-      return 34;
-    }
-
-    return 30;
-
-  };
-
-
-  // ========================================================
-  // TEXT 008 — VIEW
-  // ========================================================
+  /* ========================================================
+     TEXT 006 - RENDER
+     ======================================================== */
 
   return (
 
     <main className="obs-text-page">
 
-      {displayedMessage && (
+      {
+        displayedMessage && (
 
-        <div
-          className="obs-text"
-          key={displayedMessage.id}
-          style={{
-            fontSize:
-              `${getFontSize(
-                displayedMessage.message
-              )}px`,
-          }}
-        >
-          {displayedMessage.message}
-        </div>
+          <div className="obs-quote">
 
-      )}
+            <span
+              className="
+                obs-quote-mark
+                obs-quote-mark-open
+              "
+              aria-hidden="true"
+            >
+              “
+            </span>
+
+
+            <div className="obs-text">
+              {displayedMessage.message}
+            </div>
+
+
+            <span
+              className="
+                obs-quote-mark
+                obs-quote-mark-close
+              "
+              aria-hidden="true"
+            >
+              ”
+            </span>
+
+          </div>
+
+        )
+      }
 
     </main>
 
   );
 
 }
-
-
-export default Text;
