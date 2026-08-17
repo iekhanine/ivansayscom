@@ -10,7 +10,7 @@ const DEFAULT_SOURCE =
 export default function Live({
   source = DEFAULT_SOURCE,
 }: Props) {
-  
+
   return (
     <main className="live-underlay">
       <div className="live-background-grid" />
@@ -64,12 +64,6 @@ export default function Live({
         </div>
 
         <div className="submission-rule" />
-
-        <blockquote className="submission-quote">
-          <span className="submission-open-quote">“</span>
-          <span className="submission-close-quote">”</span>
-        </blockquote>
-
         <div className="submission-footer">
           <span>SUBMITTED VIA</span>
           <strong>IVANSAYS.COM</strong>

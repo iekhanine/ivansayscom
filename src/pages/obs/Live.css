@@ -228,9 +228,7 @@ body,
   flex-direction: column;
 
   padding: 42px 48px 38px;
-
-  border: 1px solid rgba(255, 255, 255, 0.18);
-
+  border: none;
   background: rgba(6, 7, 9, 0.79);
 
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.22);
