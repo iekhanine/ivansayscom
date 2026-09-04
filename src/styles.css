@@ -1298,3 +1298,70 @@ body {
   .admin-shell-magazine .row-buttons { justify-content: flex-start; flex-wrap: wrap; }
   .admin-shell-magazine .admin-actions { grid-column: auto; }
 }
+
+/* ==========================================================
+   ADMIN LIFECYCLE CONTROLS — v6.2
+   ========================================================== */
+.people-admin-view { display: grid; gap: 12px; }
+.admin-filter-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 9px;
+  border: 1px solid var(--mag-line);
+  background: rgba(255,255,255,.58);
+}
+.admin-filter-bar button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--mag-muted);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.admin-filter-bar button span {
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.06);
+  color: inherit;
+  font-size: 8px;
+}
+.admin-filter-bar button:hover { color: var(--mag-ink); border-color: var(--mag-line); }
+.admin-filter-bar button.is-active {
+  border-color: var(--mag-ink);
+  background: var(--mag-yellow);
+  color: var(--mag-ink);
+}
+.admin-shell-magazine .person-admin-row.is-archived {
+  background: rgba(26,27,31,.035);
+  opacity: .72;
+}
+.admin-shell-magazine .person-admin-row.is-archived strong { text-decoration: line-through; text-decoration-thickness: 1px; text-decoration-color: rgba(26,27,31,.28); }
+.admin-shell-magazine .row-buttons button.archive { color: #9e3524; }
+.admin-shell-magazine .row-buttons button.archive:hover,
+.admin-shell-magazine .row-buttons button.danger:hover,
+.admin-shell-magazine .journal-admin-row .row-buttons button.danger:hover {
+  background: rgba(244,90,63,.16);
+  border-color: var(--mag-red);
+  color: #8a2a1c;
+}
+.admin-shell-magazine .row-buttons button.restore { color: #176149; }
+.admin-shell-magazine .row-buttons button.restore:hover { background: var(--mag-mint); border-color: var(--mag-ink); color: var(--mag-ink); }
+.editor-actions { display: flex; align-items: center; gap: 8px; }
+.editor-actions-spacer { flex: 1; }
+.editor-actions .editor-delete {
+  border-color: rgba(244,90,63,.65);
+  background: rgba(244,90,63,.08);
+  color: #8a2a1c;
+}
+.editor-actions .editor-delete:hover { background: rgba(244,90,63,.18); }
+@media (max-width: 620px) {
+  .editor-actions { flex-wrap: wrap; }
+  .editor-actions-spacer { display: none; }
+  .editor-actions .editor-delete { margin-right: auto; }
+}

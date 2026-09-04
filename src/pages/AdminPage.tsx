@@ -46,6 +46,7 @@ export default function AdminPage() {
   const [reviewerId, setReviewerId] = useState<string | null>(null)
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [activeSection, setActiveSection] = useState<AdminSection>('overview')
+  const [peopleFilter, setPeopleFilter] = useState<'active' | 'archived' | 'all'>('active')
 
   const [applications, setApplications] = useState<Application[]>([])
   const [nominations, setNominations] = useState<Nomination[]>([])
@@ -307,6 +308,31 @@ export default function AdminPage() {
     await loadData()
   }
 
+  async function archivePerson(person: Person) {
+    if (!isAdmin || person.status === 'archived') return
+    if (!window.confirm(`Archive ${person.display_name}? They will be removed from the public index and homepage.`)) return
+    setNotice('')
+    const { error } = await supabase
+      .from('people')
+      .update({ status: 'archived', is_featured: false, updated_at: new Date().toISOString() })
+      .eq('id', person.id)
+    if (error) return setNotice(error.message)
+    setNotice(`${person.display_name} archived.`)
+    await loadData()
+  }
+
+  async function restorePerson(person: Person) {
+    if (!isAdmin || person.status !== 'archived') return
+    setNotice('')
+    const { error } = await supabase
+      .from('people')
+      .update({ status: 'draft', is_featured: false, updated_at: new Date().toISOString() })
+      .eq('id', person.id)
+    if (error) return setNotice(error.message)
+    setNotice(`${person.display_name} restored as a draft.`)
+    await loadData()
+  }
+
   function openReviewer(reviewer?: Reviewer) {
     if (!reviewer) return setEditingReviewer({ ...emptyReviewer })
     const access = reviewerAccess.find((item) => item.reviewer_id === reviewer.id)
@@ -364,11 +390,31 @@ export default function AdminPage() {
     await loadData()
   }
 
+  async function deleteJournalEntry(entry: JournalEntry) {
+    if (!isAdmin) return
+    const confirmed = window.confirm(`Permanently delete “${entry.title}”? This cannot be undone.`)
+    if (!confirmed) return
+    setNotice('')
+    const { error } = await supabase.from('journal_entries').delete().eq('id', entry.id)
+    if (error) return setNotice(error.message)
+    if (editingJournal?.id === entry.id) setEditingJournal(null)
+    setNotice(`“${entry.title}” deleted.`)
+    await loadData()
+  }
+
   const pendingApplications = useMemo(() => applications.filter((item) => item.status === 'pending'), [applications])
   const pendingNominations = useMemo(() => nominations.filter((item) => item.status === 'pending'), [nominations])
   const approvedApplications = useMemo(() => applications.filter((item) => item.status === 'approved'), [applications])
   const approvedNominations = useMemo(() => nominations.filter((item) => item.status === 'approved'), [nominations])
   const reviewerName = useMemo(() => new Map(reviewers.map((reviewer) => [reviewer.id, reviewer.display_name])), [reviewers])
+
+  const archivedPeopleCount = people.filter((person) => person.status === 'archived').length
+  const activePeopleCount = people.length - archivedPeopleCount
+  const visiblePeople = people.filter((person) => {
+    if (peopleFilter === 'archived') return person.status === 'archived'
+    if (peopleFilter === 'active') return person.status !== 'archived'
+    return true
+  })
 
   if (loadingAuth) return <main className="admin-login-page">Loading…</main>
 
@@ -580,16 +626,29 @@ export default function AdminPage() {
             )}
 
             {activeSection === 'people' && isAdmin && (
-              <div className="admin-list admin-list-standalone people-admin-list">
-                {people.length === 0 && <div className="admin-empty">No people in the index yet.</div>}
-                {people.map((person) => (
-                  <article className="person-admin-row" key={person.id}>
-                    <div><strong>{person.display_name}</strong><span>{person.role} · {person.category}</span></div>
-                    <span className={`status-pill status-${person.status}`}>{person.status}</span>
-                    <span className={person.is_featured ? 'feature-state is-featured' : 'feature-state'}>{person.is_featured ? '★ Featured' : 'Not featured'}</span>
-                    <div className="row-buttons"><button type="button" onClick={() => void toggleFeatured(person)}>{person.is_featured ? 'Unfeature' : 'Feature'}</button><button type="button" onClick={() => setEditingPerson(person)}>Edit</button></div>
-                  </article>
-                ))}
+              <div className="people-admin-view">
+                <div className="admin-filter-bar" role="group" aria-label="Filter people">
+                  <button className={peopleFilter === 'active' ? 'is-active' : ''} type="button" onClick={() => setPeopleFilter('active')}>Active <span>{activePeopleCount}</span></button>
+                  <button className={peopleFilter === 'archived' ? 'is-active' : ''} type="button" onClick={() => setPeopleFilter('archived')}>Archived <span>{archivedPeopleCount}</span></button>
+                  <button className={peopleFilter === 'all' ? 'is-active' : ''} type="button" onClick={() => setPeopleFilter('all')}>All <span>{people.length}</span></button>
+                </div>
+                <div className="admin-list admin-list-standalone people-admin-list">
+                  {visiblePeople.length === 0 && <div className="admin-empty">{peopleFilter === 'archived' ? 'No archived people.' : 'No people in this view yet.'}</div>}
+                  {visiblePeople.map((person) => (
+                    <article className={`person-admin-row${person.status === 'archived' ? ' is-archived' : ''}`} key={person.id}>
+                      <div><strong>{person.display_name}</strong><span>{person.role} · {person.category}</span></div>
+                      <span className={`status-pill status-${person.status}`}>{person.status}</span>
+                      <span className={person.is_featured ? 'feature-state is-featured' : 'feature-state'}>{person.is_featured ? '★ Featured' : 'Not featured'}</span>
+                      <div className="row-buttons">
+                        {person.status !== 'archived' && <button type="button" onClick={() => void toggleFeatured(person)}>{person.is_featured ? 'Unfeature' : 'Feature'}</button>}
+                        <button type="button" onClick={() => setEditingPerson(person)}>Edit</button>
+                        {person.status === 'archived'
+                          ? <button className="restore" type="button" onClick={() => void restorePerson(person)}>Restore</button>
+                          : <button className="archive" type="button" onClick={() => void archivePerson(person)}>Archive</button>}
+                      </div>
+                    </article>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -622,7 +681,7 @@ export default function AdminPage() {
                     <div><strong>{entry.title}</strong><span>{entry.author_name}</span><small>{entry.excerpt}</small></div>
                     <span className={`status-pill status-${entry.status}`}>{entry.status}</span>
                     <span className="journal-admin-date">{entry.published_at ? new Date(entry.published_at).toLocaleDateString() : 'Not published'}</span>
-                    <div className="row-buttons">{entry.status === 'published' && <Link to={`/journal/${entry.slug}`}>View ↗</Link>}<button type="button" onClick={() => setEditingJournal(entry)}>Edit</button></div>
+                    <div className="row-buttons">{entry.status === 'published' && <Link to={`/journal/${entry.slug}`}>View ↗</Link>}<button type="button" onClick={() => setEditingJournal(entry)}>Edit</button><button className="danger" type="button" onClick={() => void deleteJournalEntry(entry)}>Delete</button></div>
                   </article>
                 ))}
               </div>
@@ -693,7 +752,7 @@ export default function AdminPage() {
               <label className="full">Entry<textarea className="journal-body-editor" rows={18} value={editingJournal.body ?? ''} onChange={(e) => setEditingJournal({ ...editingJournal, body: e.target.value })} placeholder="Write the entry here. Blank lines are preserved." required /></label>
               <label>Status<select value={editingJournal.status ?? 'draft'} onChange={(e) => setEditingJournal({ ...editingJournal, status: e.target.value as JournalStatus })}><option value="draft">Draft</option><option value="published">Published</option></select></label>
             </div>
-            <div className="editor-actions"><button type="button" onClick={() => setEditingJournal(null)}>Cancel</button><button className="button button-dark" type="submit">{editingJournal.status === 'published' ? 'Publish entry' : 'Save draft'}</button></div>
+            <div className="editor-actions">{editingJournal.id && <button className="editor-delete" type="button" onClick={() => void deleteJournalEntry(editingJournal as JournalEntry)}>Delete permanently</button>}<span className="editor-actions-spacer" /><button type="button" onClick={() => setEditingJournal(null)}>Cancel</button><button className="button button-dark" type="submit">{editingJournal.status === 'published' ? 'Publish entry' : 'Save draft'}</button></div>
           </form>
         </div>
       )}
