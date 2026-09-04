@@ -101,3 +101,28 @@ export type JournalEntry = {
   created_at: string
   updated_at: string
 }
+
+export type PersonAccess = {
+  person_id: string
+  email: string
+  user_id: string | null
+  created_at: string
+}
+
+export type ShowcaseItem = {
+  id: string
+  person_id: string
+  image_path: string
+  title: string
+  description: string | null
+  alt_text: string
+  sort_order: number
+  is_published: boolean
+  is_for_sale: boolean
+  price_cents: number | null
+  currency: string
+  purchase_url: string | null
+  created_at: string
+  updated_at: string
+}
+

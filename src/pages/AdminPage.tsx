@@ -10,6 +10,7 @@ import type {
   JournalStatus,
   Nomination,
   Person,
+  PersonAccess,
   PersonStatus,
   Reviewer,
   ReviewerAccess,
@@ -19,11 +20,12 @@ import type {
 type AccessRole = 'admin' | 'reviewer' | 'none' | 'checking'
 type AdminSection = 'overview' | 'applications' | 'nominations' | 'recommended' | 'people' | 'reviewers' | 'journal'
 type ReviewerDraft = Partial<Reviewer> & { email?: string }
+type PersonDraft = Partial<Person> & { access_email?: string }
 
-const emptyPerson: Partial<Person> = {
+const emptyPerson: PersonDraft = {
   display_name: '', slug: '', category: 'developer', role: '', bio: '', location: '', timezone: '',
   availability: 'available', skills: [], website_url: '', github_url: '', portfolio_url: '', contact_url: '',
-  monogram: '', sort_order: 100, status: 'draft', is_featured: false, featured_order: 100, featured_note: '',
+  monogram: '', sort_order: 100, status: 'draft', is_featured: false, featured_order: 100, featured_note: '', access_email: '',
 }
 
 const emptyReviewer: ReviewerDraft = {
@@ -32,7 +34,7 @@ const emptyReviewer: ReviewerDraft = {
 }
 
 const emptyJournal: Partial<JournalEntry> = {
-  title: '', slug: '', excerpt: '', body: '', author_name: 'IvanSays Editorial', status: 'draft', published_at: null,
+  title: '', slug: '', excerpt: '', body: '', author_name: 'ivansays Editorial', status: 'draft', published_at: null,
 }
 
 function slugify(value: string) {
@@ -53,9 +55,10 @@ export default function AdminPage() {
   const [people, setPeople] = useState<Person[]>([])
   const [reviewers, setReviewers] = useState<Reviewer[]>([])
   const [reviewerAccess, setReviewerAccess] = useState<ReviewerAccess[]>([])
+  const [personAccess, setPersonAccess] = useState<PersonAccess[]>([])
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([])
 
-  const [editingPerson, setEditingPerson] = useState<Partial<Person> | null>(null)
+  const [editingPerson, setEditingPerson] = useState<PersonDraft | null>(null)
   const [editingReviewer, setEditingReviewer] = useState<ReviewerDraft | null>(null)
   const [editingJournal, setEditingJournal] = useState<Partial<JournalEntry> | null>(null)
 
@@ -89,17 +92,19 @@ export default function AdminPage() {
     setNominations((nominationsResult.data as Nomination[] | null) ?? [])
 
     if (accessRole === 'admin') {
-      const [peopleResult, reviewersResult, accessResult, journalResult] = await Promise.all([
+      const [peopleResult, reviewersResult, accessResult, journalResult, personAccessResult] = await Promise.all([
         supabase.from('people').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
         supabase.from('reviewers').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
         supabase.from('reviewer_access').select('*'),
         supabase.from('journal_entries').select('*').order('created_at', { ascending: false }),
+        supabase.from('person_access').select('*'),
       ])
 
-      errors.push(...[peopleResult.error, reviewersResult.error, accessResult.error, journalResult.error].filter(Boolean))
+      errors.push(...[peopleResult.error, reviewersResult.error, accessResult.error, journalResult.error, personAccessResult.error].filter(Boolean))
       setPeople((peopleResult.data as Person[] | null) ?? [])
       setReviewers((reviewersResult.data as Reviewer[] | null) ?? [])
       setReviewerAccess((accessResult.data as ReviewerAccess[] | null) ?? [])
+      setPersonAccess((personAccessResult.data as PersonAccess[] | null) ?? [])
       setJournalEntries((journalResult.data as JournalEntry[] | null) ?? [])
     }
 
@@ -178,6 +183,7 @@ export default function AdminPage() {
     if (isAdmin) {
       channel = channel
         .on('postgres_changes', { event: '*', schema: 'public', table: 'people' }, () => void loadData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'person_access' }, () => void loadData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'reviewers' }, () => void loadData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'journal_entries' }, () => void loadData())
     }
@@ -230,7 +236,7 @@ export default function AdminPage() {
     const now = new Date().toISOString()
     const payload = {
       display_name: app.name.trim(), slug: slugify(app.name), category: app.category, role: app.role.trim(),
-      bio: (app.current_focus || app.note || `${app.name} was selected for the IvanSays directory.`).trim(),
+      bio: (app.current_focus || app.note || `${app.name} was selected for the ivansays directory.`).trim(),
       location: app.location?.trim() || null, timezone: app.timezone?.trim() || null,
       availability: app.availability || 'available', skills: [] as string[], website_url: app.secondary_url?.trim() || null,
       github_url: null, portfolio_url: app.primary_url.trim(), contact_url: null, monogram: null, sort_order: 100,
@@ -238,8 +244,21 @@ export default function AdminPage() {
       featured_note: featured ? (app.current_focus?.trim() || app.note?.trim() || null) : null,
       curated_at: now, updated_at: now,
     }
-    const { error: personError } = await supabase.from('people').upsert(payload, { onConflict: 'slug' })
+    const { data: personData, error: personError } = await supabase.from('people').upsert(payload, { onConflict: 'slug' }).select('id').single()
     if (personError) return setNotice(`Could not publish profile: ${personError.message}`)
+    if (personData?.id && app.email.trim()) {
+      const email = app.email.trim().toLowerCase()
+      const existingAccess = personAccess.find((item) => item.person_id === personData.id)
+      const accessPayload = {
+        person_id: personData.id,
+        email,
+        user_id: existingAccess && existingAccess.email.toLowerCase() === email
+          ? existingAccess.user_id
+          : null,
+      }
+      const { error: accessError } = await supabase.from('person_access').upsert(accessPayload, { onConflict: 'person_id' })
+      if (accessError) return setNotice(`Profile published, but Studio access could not be prepared: ${accessError.message}`)
+    }
     const { error: reviewError } = await supabase.from('applications').update({ status: 'approved' }).eq('id', app.id)
     if (reviewError) return setNotice(`Profile published, but the application queue could not update: ${reviewError.message}`)
     setNotice(featured ? 'Published and featured on the homepage.' : 'Published to the directory.')
@@ -269,7 +288,7 @@ export default function AdminPage() {
   function draftFromApplication(app: Application) {
     setEditingPerson({ ...emptyPerson, display_name: app.name, slug: slugify(app.name), category: app.category, role: app.role,
       location: app.location ?? '', timezone: app.timezone ?? '', availability: app.availability ?? 'available',
-      bio: app.current_focus ?? app.note ?? '', portfolio_url: app.primary_url, website_url: app.secondary_url ?? '' })
+      bio: app.current_focus ?? app.note ?? '', portfolio_url: app.primary_url, website_url: app.secondary_url ?? '', access_email: app.email })
   }
 
   function draftFromNomination(item: Nomination) {
@@ -293,12 +312,40 @@ export default function AdminPage() {
       curated_at: editingPerson.status === 'published' ? (editingPerson.curated_at || new Date().toISOString()) : editingPerson.curated_at || null,
       updated_at: new Date().toISOString(),
     }
-    const query = editingPerson.id ? supabase.from('people').update(payload).eq('id', editingPerson.id) : supabase.from('people').insert(payload)
-    const { error } = await query
-    if (error) return setNotice(error.message)
+
+    const result = editingPerson.id
+      ? await supabase.from('people').update(payload).eq('id', editingPerson.id).select('id').single()
+      : await supabase.from('people').insert(payload).select('id').single()
+
+    if (result.error) return setNotice(result.error.message)
+    const personId = String(result.data.id)
+    const accessEmail = editingPerson.access_email?.trim().toLowerCase() || ''
+    const existingAccess = personAccess.find((item) => item.person_id === personId)
+
+    if (accessEmail) {
+      const accessPayload = {
+        person_id: personId,
+        email: accessEmail,
+        user_id: existingAccess && existingAccess.email.toLowerCase() === accessEmail
+          ? existingAccess.user_id
+          : null,
+      }
+      const { error: accessError } = await supabase.from('person_access').upsert(accessPayload, { onConflict: 'person_id' })
+      if (accessError) return setNotice(`Directory entry saved, but Studio access failed: ${accessError.message}`)
+    } else if (existingAccess) {
+      const { error: accessError } = await supabase.from('person_access').delete().eq('person_id', personId)
+      if (accessError) return setNotice(`Directory entry saved, but Studio access could not be removed: ${accessError.message}`)
+    }
+
     setEditingPerson(null)
     setNotice('Directory entry saved.')
     await loadData()
+  }
+
+  function openPerson(person?: Person) {
+    if (!person) return setEditingPerson({ ...emptyPerson })
+    const access = personAccess.find((item) => item.person_id === person.id)
+    setEditingPerson({ ...person, access_email: access?.email ?? '' })
   }
 
   async function toggleFeatured(person: Person) {
@@ -378,7 +425,7 @@ export default function AdminPage() {
     const payload = {
       title: editingJournal.title?.trim(), slug: editingJournal.slug?.trim() || slugify(editingJournal.title || ''),
       excerpt: editingJournal.excerpt?.trim(), body: editingJournal.body?.trim(),
-      author_name: editingJournal.author_name?.trim() || 'IvanSays Editorial', status,
+      author_name: editingJournal.author_name?.trim() || 'ivansays Editorial', status,
       published_at: status === 'published' ? (editingJournal.published_at || new Date().toISOString()) : null,
       updated_at: new Date().toISOString(),
     }
@@ -422,9 +469,9 @@ export default function AdminPage() {
     return (
       <main className="admin-login-page">
         <form className="admin-login" onSubmit={login}>
-          <span className="kicker">IVANSAYS.COM</span>
+          <span className="kicker">ivansays.COM</span>
           <h1>{authMode === 'login' ? 'Review desk' : 'Reviewer access'}</h1>
-          <p className="admin-login-copy">{authMode === 'login' ? 'For IvanSays administrators and approved reviewers.' : 'Create an account only with the email address that was pre-authorized by an IvanSays administrator.'}</p>
+          <p className="admin-login-copy">{authMode === 'login' ? 'For ivansays administrators and approved reviewers.' : 'Create an account only with the email address that was pre-authorized by an ivansays administrator.'}</p>
           <label>Email<input name="email" type="email" required /></label>
           <label>Password<input name="password" type="password" minLength={8} required /></label>
           {notice && <p className="form-error">{notice}</p>}
@@ -473,7 +520,7 @@ export default function AdminPage() {
     recommended: { eyebrow: 'EDITORIAL QUEUE', title: 'Recommended', description: isAdmin ? 'Reviewed submissions ready for a final editorial decision.' : 'Submissions reviewers have recommended for editorial consideration.' },
     people: { eyebrow: 'INDEX', title: 'People', description: 'Manage draft, published, archived, and homepage-featured directory profiles.' },
     reviewers: { eyebrow: 'TRANSPARENCY', title: 'Review Panel', description: 'Manage reviewer access and the public-facing Review Panel.' },
-    journal: { eyebrow: 'EDITORIAL', title: 'Journal', description: 'Write, edit, publish, and manage IvanSays journal entries.' },
+    journal: { eyebrow: 'EDITORIAL', title: 'Journal', description: 'Write, edit, publish, and manage ivansays journal entries.' },
   }
 
   const navItems: Array<{ id: AdminSection; label: string; count?: number; adminOnly?: boolean; tone: string }> = [
@@ -535,7 +582,7 @@ export default function AdminPage() {
               <p>{currentMeta.description}</p>
             </div>
             <div className="admin-workspace-head-actions">
-              {activeSection === 'people' && isAdmin && <button className="button button-dark" type="button" onClick={() => setEditingPerson({ ...emptyPerson })}>+ Add person</button>}
+              {activeSection === 'people' && isAdmin && <button className="button button-dark" type="button" onClick={() => openPerson()}>+ Add person</button>}
               {activeSection === 'reviewers' && isAdmin && <><Link className="admin-text-link" to="/review-panel">Public panel ↗</Link><button className="button button-dark" type="button" onClick={() => openReviewer()}>+ Add reviewer</button></>}
               {activeSection === 'journal' && isAdmin && <><Link className="admin-text-link" to="/journal">Public journal ↗</Link><button className="button button-dark" type="button" onClick={() => setEditingJournal({ ...emptyJournal })}>+ Write entry</button></>}
             </div>
@@ -636,12 +683,13 @@ export default function AdminPage() {
                   {visiblePeople.length === 0 && <div className="admin-empty">{peopleFilter === 'archived' ? 'No archived people.' : 'No people in this view yet.'}</div>}
                   {visiblePeople.map((person) => (
                     <article className={`person-admin-row${person.status === 'archived' ? ' is-archived' : ''}`} key={person.id}>
-                      <div><strong>{person.display_name}</strong><span>{person.role} · {person.category}</span></div>
+                      <div><strong>{person.display_name}</strong><span>{person.role} · {person.category}</span><small>{personAccess.find((access) => access.person_id === person.id)?.user_id ? 'Studio connected' : personAccess.find((access) => access.person_id === person.id)?.email ? 'Studio access prepared' : 'No Studio login'}</small></div>
                       <span className={`status-pill status-${person.status}`}>{person.status}</span>
                       <span className={person.is_featured ? 'feature-state is-featured' : 'feature-state'}>{person.is_featured ? '★ Featured' : 'Not featured'}</span>
                       <div className="row-buttons">
+                        {person.status === 'published' && <Link to={`/people/${person.slug}`}>Showcase ↗</Link>}
                         {person.status !== 'archived' && <button type="button" onClick={() => void toggleFeatured(person)}>{person.is_featured ? 'Unfeature' : 'Feature'}</button>}
-                        <button type="button" onClick={() => setEditingPerson(person)}>Edit</button>
+                        <button type="button" onClick={() => openPerson(person)}>Edit</button>
                         {person.status === 'archived'
                           ? <button className="restore" type="button" onClick={() => void restorePerson(person)}>Restore</button>
                           : <button className="archive" type="button" onClick={() => void archivePerson(person)}>Archive</button>}
@@ -704,6 +752,7 @@ export default function AdminPage() {
               <label>GitHub<input type="url" value={editingPerson.github_url ?? ''} onChange={(e) => setEditingPerson({ ...editingPerson, github_url: e.target.value })} /></label>
               <label>Website<input type="url" value={editingPerson.website_url ?? ''} onChange={(e) => setEditingPerson({ ...editingPerson, website_url: e.target.value })} /></label>
               <label>Contact URL<input type="url" value={editingPerson.contact_url ?? ''} onChange={(e) => setEditingPerson({ ...editingPerson, contact_url: e.target.value })} /></label>
+              <label className="full">Showcase login email <span>private · grants /studio access</span><input type="email" value={editingPerson.access_email ?? ''} onChange={(e) => setEditingPerson({ ...editingPerson, access_email: e.target.value })} placeholder="person@example.com" /></label>
               <label>Location<input value={editingPerson.location ?? ''} onChange={(e) => setEditingPerson({ ...editingPerson, location: e.target.value })} /></label>
               <label>Timezone<input value={editingPerson.timezone ?? ''} onChange={(e) => setEditingPerson({ ...editingPerson, timezone: e.target.value })} /></label>
               <label>Monogram<input maxLength={4} value={editingPerson.monogram ?? ''} onChange={(e) => setEditingPerson({ ...editingPerson, monogram: e.target.value })} /></label>
@@ -747,7 +796,7 @@ export default function AdminPage() {
             <div className="editor-grid">
               <label className="full">Title<input value={editingJournal.title ?? ''} onChange={(e) => setEditingJournal({ ...editingJournal, title: e.target.value, slug: editingJournal.id ? editingJournal.slug : slugify(e.target.value) })} required /></label>
               <label>Slug<input value={editingJournal.slug ?? ''} onChange={(e) => setEditingJournal({ ...editingJournal, slug: e.target.value })} required /></label>
-              <label>Byline<input value={editingJournal.author_name ?? 'IvanSays Editorial'} onChange={(e) => setEditingJournal({ ...editingJournal, author_name: e.target.value })} required /></label>
+              <label>Byline<input value={editingJournal.author_name ?? 'ivansays Editorial'} onChange={(e) => setEditingJournal({ ...editingJournal, author_name: e.target.value })} required /></label>
               <label className="full">Excerpt<textarea rows={3} value={editingJournal.excerpt ?? ''} onChange={(e) => setEditingJournal({ ...editingJournal, excerpt: e.target.value })} placeholder="Short summary shown on the Journal index." required /></label>
               <label className="full">Entry<textarea className="journal-body-editor" rows={18} value={editingJournal.body ?? ''} onChange={(e) => setEditingJournal({ ...editingJournal, body: e.target.value })} placeholder="Write the entry here. Blank lines are preserved." required /></label>
               <label>Status<select value={editingJournal.status ?? 'draft'} onChange={(e) => setEditingJournal({ ...editingJournal, status: e.target.value as JournalStatus })}><option value="draft">Draft</option><option value="published">Published</option></select></label>

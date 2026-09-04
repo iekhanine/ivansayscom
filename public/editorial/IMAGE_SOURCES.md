@@ -1,4 +1,4 @@
-# IvanSays editorial image sources
+# ivansays editorial image sources
 
 These images are used as editorial/category atmosphere only. They are not portraits of listed people and do not imply endorsement by anyone depicted.
 

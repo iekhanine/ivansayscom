@@ -116,7 +116,7 @@ export default function HomePage() {
                 {lead.skills.slice(0, 5).map((skill) => <span key={skill}>{skill}</span>)}
               </div>
               <div className="cover-actions">
-                {firstLink(lead) && <a className="button button-dark" href={firstLink(lead) ?? undefined} target="_blank" rel="noreferrer">See the work ↗</a>}
+                <Link className="button button-dark" to={`/people/${lead.slug}`}>View showcase →</Link>{firstLink(lead) && <a className="button" href={firstLink(lead) ?? undefined} target="_blank" rel="noreferrer">External work ↗</a>}
                 <span className={`availability availability-${lead.availability}`}>
                   <i aria-hidden="true" />
                   {lead.availability === 'available' ? 'Available' : lead.availability === 'limited' ? 'Limited availability' : 'Not currently available'}
@@ -188,7 +188,7 @@ export default function HomePage() {
           <div>
             <span className="kicker">HELP SHAPE THE NEXT EDITION</span>
             <h2>Know someone whose work deserves a closer look?</h2>
-            <p>Nominations and self-submissions go through human review. Inclusion and homepage features are editorial, never purchased.</p>
+            <p>Nominations and self-submissions go through editorial review. Inclusion and homepage features are selected, never purchased.</p>
           </div>
           <div className="editorial-callout-actions">
             <Link className="button button-light" to="/nominate">Nominate someone</Link>

@@ -9,8 +9,8 @@ export default function AboutPage() {
       <div className="shell page-wrap">
         <header className="page-heading compact-heading">
           <span className="kicker">ABOUT</span>
-          <h1>A small directory with human judgment.</h1>
-          <p>IvanSays collects developers, creators, and artists whose work is worth a closer look.</p>
+          <h1>a small curation</h1>
+          <p>ivansays collects developers, creators, and artists whose work is worth a looksee.</p>
         </header>
 
         <section className="content-grid">
@@ -35,12 +35,12 @@ export default function AboutPage() {
           </article>
           <article className="content-card">
             <h2>Features are editorial</h2>
-            <p>Homepage features highlight work the review team believes deserves extra attention. They are not advertisements.</p>
+            <p>Homepage features highlight work the review team believes deserves attention, and rotate on a weekly basis.</p>
           </article>
         </section>
 
         <section className="page-cta-row">
-          <div><strong>Know somebody who belongs here?</strong><span>A good nomination can be one link and a specific reason.</span></div>
+          <div><strong>Know somebody who belongs here?</strong><span>a good nomination can just be a link and a reason.</span></div>
           <div><Link className="button button-quiet" to="/review-panel">Review panel</Link><Link className="button button-quiet" to="/nominate">Nominate someone</Link><Link className="button button-dark" to="/directory">Browse directory</Link></div>
         </section>
       </div>

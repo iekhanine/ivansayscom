@@ -9,8 +9,8 @@ export default function SiteFooter() {
       <div className="shell footer-inner">
         <div className="footer-brand-block">
           <Link className="footer-wordmark" to="/">ivansays</Link>
-          <p>A human-curated index of developers, creators, and artists doing work worth finding.</p>
-          <span className="footer-issue">CURATED ON PURPOSE · EST. 2026</span>
+          <p>An independently selected index of developers, creators, and artists doing work worth seeing.</p>
+          <span className="footer-issue">EST. 2026</span>
         </div>
         <nav aria-label="Footer navigation">
           <Link to="/directory">Directory</Link>
@@ -19,6 +19,7 @@ export default function SiteFooter() {
           <Link to="/philosophy">Selection</Link>
           <Link to="/nominate">Nominate someone</Link>
           <Link to="/apply">Submit your work</Link>
+          <Link to="/studio">Member Studio</Link>
           <a href="mailto:hello@ivansays.com">Contact</a>
         </nav>
       </div>

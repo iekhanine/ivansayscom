@@ -33,13 +33,13 @@ export default function ReviewPanelPage() {
       <div className="shell page-wrap">
         <header className="page-heading compact-heading">
           <span className="kicker">REVIEW PANEL</span>
-          <h1>The people behind the review process.</h1>
-          <p>Submissions are evaluated by working practitioners with experience in the disciplines represented in the directory.</p>
+          <h1>the panelists...</h1>
+          <p>submissions are evaluated by working practitioners with experience in the disciplines represented in the directory.</p>
         </header>
 
         <section className="review-panel-note">
           <strong>How review works</strong>
-          <p>Reviewers evaluate the work and make recommendations. Final publication and homepage features remain editorial decisions made by IvanSays administration.</p>
+          <p>Reviewers evaluate the work and make recommendations. Final publication and homepage features remain editorial decisions made by ivansays administration.</p>
         </section>
 
         {loading ? (

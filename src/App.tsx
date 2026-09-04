@@ -9,12 +9,16 @@ import ReviewPanelPage from './pages/ReviewPanelPage'
 import ApplyPage from './pages/ApplyPage'
 import NominatePage from './pages/NominatePage'
 import AdminPage from './pages/AdminPage'
+import ShowcasePage from './pages/ShowcasePage'
+import StudioPage from './pages/StudioPage'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/directory" element={<DirectoryPage />} />
+      <Route path="/people/:slug" element={<ShowcasePage />} />
+      <Route path="/studio" element={<StudioPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/philosophy" element={<PhilosophyPage />} />
       <Route path="/review-panel" element={<ReviewPanelPage />} />

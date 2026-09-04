@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { Person } from '../types'
 
 function initials(name: string) {
@@ -30,13 +31,13 @@ export default function PersonCard({ person, compact = false }: { person: Person
         {person.is_featured && <span className="featured-chip">Featured</span>}
       </div>
 
-      <div className="person-identity">
+      <Link className="person-identity person-identity-link" to={`/people/${person.slug}`}>
         <div className="monogram" aria-hidden="true">{person.monogram || initials(person.display_name)}</div>
         <div>
           <h2>{person.display_name}</h2>
           <p>{person.role}</p>
         </div>
-      </div>
+      </Link>
 
       {!compact && <p className="person-bio">{person.bio}</p>}
 
@@ -50,7 +51,8 @@ export default function PersonCard({ person, compact = false }: { person: Person
           {person.availability === 'available' ? 'Available' : person.availability === 'limited' ? 'Limited' : 'Unavailable'}
         </span>
         <span className="person-links">
-          {links(person).slice(0, compact ? 1 : 4).map(([label, url]) => (
+          <Link className="showcase-link" to={`/people/${person.slug}`}>Showcase →</Link>
+          {!compact && links(person).slice(0, 2).map(([label, url]) => (
             <a href={url} target="_blank" rel="noreferrer" key={`${label}-${url}`}>{label} ↗</a>
           ))}
         </span>

@@ -54,8 +54,8 @@ export default function DirectoryPage() {
       <div className="shell page-wrap">
         <header className="page-heading compact-heading">
           <span className="kicker">DIRECTORY</span>
-          <h1>People in the index</h1>
-          <p>A selective collection of developers, creators, and artists. No ranking algorithm and no paid placement.</p>
+          <h1>the creators...</h1>
+          <p>a selective collection of developers and artists.</p>
         </header>
 
         <section className="directory-controls">
