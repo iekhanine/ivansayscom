@@ -17,6 +17,7 @@ import type {
 } from '../types'
 
 type AccessRole = 'admin' | 'reviewer' | 'none' | 'checking'
+type AdminSection = 'overview' | 'applications' | 'nominations' | 'recommended' | 'people' | 'reviewers' | 'journal'
 type ReviewerDraft = Partial<Reviewer> & { email?: string }
 
 const emptyPerson: Partial<Person> = {
@@ -31,7 +32,7 @@ const emptyReviewer: ReviewerDraft = {
 }
 
 const emptyJournal: Partial<JournalEntry> = {
-  title: '', slug: '', excerpt: '', body: '', author_name: 'ivansays Editorial', status: 'draft', published_at: null,
+  title: '', slug: '', excerpt: '', body: '', author_name: 'IvanSays Editorial', status: 'draft', published_at: null,
 }
 
 function slugify(value: string) {
@@ -44,6 +45,7 @@ export default function AdminPage() {
   const [accessRole, setAccessRole] = useState<AccessRole>('checking')
   const [reviewerId, setReviewerId] = useState<string | null>(null)
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
+  const [activeSection, setActiveSection] = useState<AdminSection>('overview')
 
   const [applications, setApplications] = useState<Application[]>([])
   const [nominations, setNominations] = useState<Nomination[]>([])
@@ -62,6 +64,12 @@ export default function AdminPage() {
 
   const isAdmin = accessRole === 'admin'
   const isReviewer = accessRole === 'reviewer'
+
+  useEffect(() => {
+    if (isReviewer && ['people', 'reviewers', 'journal'].includes(activeSection)) {
+      setActiveSection('overview')
+    }
+  }, [activeSection, isReviewer])
 
   const loadData = useCallback(async () => {
     if (!session || (accessRole !== 'admin' && accessRole !== 'reviewer')) return
@@ -221,7 +229,7 @@ export default function AdminPage() {
     const now = new Date().toISOString()
     const payload = {
       display_name: app.name.trim(), slug: slugify(app.name), category: app.category, role: app.role.trim(),
-      bio: (app.current_focus || app.note || `${app.name} was selected for the ivansays directory.`).trim(),
+      bio: (app.current_focus || app.note || `${app.name} was selected for the IvanSays directory.`).trim(),
       location: app.location?.trim() || null, timezone: app.timezone?.trim() || null,
       availability: app.availability || 'available', skills: [] as string[], website_url: app.secondary_url?.trim() || null,
       github_url: null, portfolio_url: app.primary_url.trim(), contact_url: null, monogram: null, sort_order: 100,
@@ -344,7 +352,7 @@ export default function AdminPage() {
     const payload = {
       title: editingJournal.title?.trim(), slug: editingJournal.slug?.trim() || slugify(editingJournal.title || ''),
       excerpt: editingJournal.excerpt?.trim(), body: editingJournal.body?.trim(),
-      author_name: editingJournal.author_name?.trim() || 'ivansays Editorial', status,
+      author_name: editingJournal.author_name?.trim() || 'IvanSays Editorial', status,
       published_at: status === 'published' ? (editingJournal.published_at || new Date().toISOString()) : null,
       updated_at: new Date().toISOString(),
     }
@@ -368,9 +376,9 @@ export default function AdminPage() {
     return (
       <main className="admin-login-page">
         <form className="admin-login" onSubmit={login}>
-          <span className="kicker">ivansays.COM</span>
+          <span className="kicker">IVANSAYS.COM</span>
           <h1>{authMode === 'login' ? 'Review desk' : 'Reviewer access'}</h1>
-          <p className="admin-login-copy">{authMode === 'login' ? 'For ivansays administrators and approved reviewers.' : 'Create an account only with the email address that was pre-authorized by an ivansays administrator.'}</p>
+          <p className="admin-login-copy">{authMode === 'login' ? 'For IvanSays administrators and approved reviewers.' : 'Create an account only with the email address that was pre-authorized by an IvanSays administrator.'}</p>
           <label>Email<input name="email" type="email" required /></label>
           <label>Password<input name="password" type="password" minLength={8} required /></label>
           {notice && <p className="form-error">{notice}</p>}
@@ -403,139 +411,225 @@ export default function AdminPage() {
     )
   }
 
+  const publishedCount = people.filter((person) => person.status === 'published').length
+  const featuredCount = people.filter((person) => person.status === 'published' && person.is_featured).length
+  const activeReviewerCount = reviewers.filter((reviewer) => reviewer.is_active).length
+  const recommendedCount = approvedApplications.length + approvedNominations.length
+
+  const sectionMeta: Record<AdminSection, { eyebrow: string; title: string; description: string }> = {
+    overview: {
+      eyebrow: isAdmin ? 'CURATION DESK' : 'REVIEW DESK',
+      title: 'Overview',
+      description: isAdmin ? 'Review incoming work, make editorial decisions, and manage the published index.' : 'Review incoming work and send strong submissions forward for editorial consideration.',
+    },
+    applications: { eyebrow: 'INBOX', title: 'Self submissions', description: 'People submitting their own work for consideration.' },
+    nominations: { eyebrow: 'INBOX', title: 'Nominations', description: 'People recommended by somebody else for consideration.' },
+    recommended: { eyebrow: 'EDITORIAL QUEUE', title: 'Recommended', description: isAdmin ? 'Reviewed submissions ready for a final editorial decision.' : 'Submissions reviewers have recommended for editorial consideration.' },
+    people: { eyebrow: 'INDEX', title: 'People', description: 'Manage draft, published, archived, and homepage-featured directory profiles.' },
+    reviewers: { eyebrow: 'TRANSPARENCY', title: 'Review Panel', description: 'Manage reviewer access and the public-facing Review Panel.' },
+    journal: { eyebrow: 'EDITORIAL', title: 'Journal', description: 'Write, edit, publish, and manage IvanSays journal entries.' },
+  }
+
+  const navItems: Array<{ id: AdminSection; label: string; count?: number; adminOnly?: boolean; tone: string }> = [
+    { id: 'overview', label: 'Overview', tone: 'yellow' },
+    { id: 'applications', label: 'Self submissions', count: pendingApplications.length, tone: 'blue' },
+    { id: 'nominations', label: 'Nominations', count: pendingNominations.length, tone: 'red' },
+    { id: 'recommended', label: 'Recommended', count: recommendedCount, tone: 'mint' },
+    { id: 'people', label: 'People / Index', count: people.length, adminOnly: true, tone: 'lilac' },
+    { id: 'reviewers', label: 'Review Panel', count: activeReviewerCount, adminOnly: true, tone: 'pink' },
+    { id: 'journal', label: 'Journal', count: journalEntries.length, adminOnly: true, tone: 'yellow' },
+  ]
+
+  const visibleNavItems = navItems.filter((item) => !item.adminOnly || isAdmin)
+  const currentMeta = sectionMeta[activeSection]
+
   return (
-    <main className="admin-shell">
-      <header className="admin-header">
-        <div><strong>ivansays</strong><span>{isAdmin ? 'Curation desk · Admin' : 'Review desk · Reviewer'}</span></div>
-        <div><Link to="/">Public site ↗</Link><button type="button" onClick={() => void loadData()} disabled={loadingData}>{loadingData ? 'Refreshing…' : 'Refresh'}</button><button type="button" onClick={() => void supabase.auth.signOut()}>Log out</button></div>
-      </header>
-
-      {notice && <div className="admin-notice">{notice}</div>}
-      {dataError && <div className="admin-notice admin-notice-error">Database: {dataError}</div>}
-
-      <section className="admin-dashboard shell">
-        <div className="admin-stats">
-          <article><span>Self submissions</span><strong>{pendingApplications.length}</strong><small>waiting for review</small></article>
-          <article><span>Nominations</span><strong>{pendingNominations.length}</strong><small>waiting for review</small></article>
-          {isAdmin ? <>
-            <article><span>Published</span><strong>{people.filter((person) => person.status === 'published').length}</strong><small>directory profiles</small></article>
-            <article><span>Review panel</span><strong>{reviewers.filter((reviewer) => reviewer.is_active).length}</strong><small>active reviewers</small></article>
-          </> : <>
-            <article><span>Recommended</span><strong>{approvedApplications.length + approvedNominations.length}</strong><small>awaiting editorial decision</small></article>
-            <article><span>Your role</span><strong className="admin-role-stat">Reviewer</strong><small>recommend or decline</small></article>
-          </>}
-        </div>
-
-        <section className="admin-section">
-          <div className="admin-section-title"><div><span className="kicker">INBOX</span><h2>Self submissions</h2></div><span>{pendingApplications.length} pending</span></div>
-          <div className="admin-list">
-            {pendingApplications.length === 0 && <div className="admin-empty">Nothing waiting here.</div>}
-            {pendingApplications.map((app) => (
-              <article className="review-row" key={app.id}>
-                <div className="review-person"><strong>{app.name}</strong><span>{app.role} · {app.category}</span>{(app.location || app.timezone) && <small>{[app.location, app.timezone].filter(Boolean).join(' · ')}</small>}</div>
-                <div className="review-links"><a href={app.primary_url} target="_blank" rel="noreferrer">Primary work ↗</a>{app.secondary_url && <a href={app.secondary_url} target="_blank" rel="noreferrer">Second ↗</a>}{app.tertiary_url && <a href={app.tertiary_url} target="_blank" rel="noreferrer">Third ↗</a>}</div>
-                <div className="review-copy"><p>{app.current_focus || app.note || 'No additional context provided.'}</p></div>
-                <div className="admin-actions">
-                  {isAdmin ? <><button onClick={() => void publishApplication(app)} type="button">Approve &amp; publish</button><button onClick={() => void publishApplication(app, true)} type="button">Approve + feature</button><button onClick={() => draftFromApplication(app)} type="button">Create draft</button><button className="danger" onClick={() => void updateReviewStatus('applications', app.id, 'rejected')} type="button">Reject</button></> : <><button onClick={() => void updateReviewStatus('applications', app.id, 'approved')} type="button">Recommend</button><button className="danger" onClick={() => void updateReviewStatus('applications', app.id, 'rejected')} type="button">Decline</button></>}
-                </div>
-              </article>
-            ))}
+    <main className="admin-shell admin-shell-magazine">
+      <div className="admin-frame">
+        <aside className="admin-sidebar">
+          <div className="admin-sidebar-brand">
+            <Link to="/" className="admin-wordmark"><span>ivansays</span><small>focus on indie</small></Link>
+            <span className="admin-role-chip">{isAdmin ? 'ADMIN' : 'REVIEWER'}</span>
           </div>
-        </section>
 
-        <section className="admin-section">
-          <div className="admin-section-title"><div><span className="kicker">INBOX</span><h2>Nominations</h2></div><span>{pendingNominations.length} pending</span></div>
-          <div className="admin-list">
-            {pendingNominations.length === 0 && <div className="admin-empty">No nominations waiting.</div>}
-            {pendingNominations.map((item) => (
-              <article className="review-row" key={item.id}>
-                <div className="review-person"><strong>{item.nominee_name}</strong><span>{item.nominee_role} · {item.category}</span><small>Nominated by {item.nominator_name}{item.relationship ? ` · ${item.relationship}` : ''}</small></div>
-                <div className="review-links"><a href={item.primary_url} target="_blank" rel="noreferrer">Primary work ↗</a>{item.secondary_url && <a href={item.secondary_url} target="_blank" rel="noreferrer">Second ↗</a>}</div>
-                <div className="review-copy"><p>{item.why_nominate}</p></div>
-                <div className="admin-actions">
-                  {isAdmin ? <><button onClick={() => void publishNomination(item)} type="button">Approve &amp; publish</button><button onClick={() => void publishNomination(item, true)} type="button">Approve + feature</button><button onClick={() => draftFromNomination(item)} type="button">Create draft</button><button className="danger" onClick={() => void updateReviewStatus('nominations', item.id, 'rejected')} type="button">Reject</button></> : <><button onClick={() => void updateReviewStatus('nominations', item.id, 'approved')} type="button">Recommend</button><button className="danger" onClick={() => void updateReviewStatus('nominations', item.id, 'rejected')} type="button">Decline</button></>}
-                </div>
-              </article>
+          <nav className="admin-side-nav" aria-label="Admin sections">
+            <span className="admin-nav-label">WORKSPACE</span>
+            {visibleNavItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`admin-nav-item tone-${item.tone}${activeSection === item.id ? ' is-active' : ''}`}
+                onClick={() => setActiveSection(item.id)}
+              >
+                <i aria-hidden="true" />
+                <span>{item.label}</span>
+                {typeof item.count === 'number' && <b>{item.count}</b>}
+              </button>
             ))}
+          </nav>
+
+          <div className="admin-sidebar-bottom">
+            <div className="admin-sidebar-account">
+              <span>SIGNED IN</span>
+              <strong>{session.user.email || 'Supabase account'}</strong>
+            </div>
+            <div className="admin-sidebar-links">
+              <Link to="/">Public site ↗</Link>
+              <button type="button" onClick={() => void loadData()} disabled={loadingData}>{loadingData ? 'Refreshing…' : 'Refresh data'}</button>
+              <button type="button" onClick={() => void supabase.auth.signOut()}>Log out</button>
+            </div>
           </div>
-        </section>
+        </aside>
 
-        {isAdmin && (approvedApplications.length > 0 || approvedNominations.length > 0) && (
-          <section className="admin-section">
-            <div className="admin-section-title"><div><span className="kicker">RECOMMENDED</span><h2>Ready for editorial decision</h2></div><span>{approvedApplications.length + approvedNominations.length} reviewed</span></div>
-            <div className="admin-list">
-              {approvedNominations.map((item) => (
-                <article className="review-row" key={`approved-nomination-${item.id}`}>
-                  <div className="review-person"><strong>{item.nominee_name}</strong><span>{item.nominee_role} · {item.category}</span><small>{item.reviewed_by ? `Recommended by ${reviewerName.get(item.reviewed_by) || 'reviewer'}` : 'Approved nomination'} · {item.nominator_name}</small></div>
-                  <div className="review-links"><a href={item.primary_url} target="_blank" rel="noreferrer">Primary work ↗</a>{item.secondary_url && <a href={item.secondary_url} target="_blank" rel="noreferrer">Second ↗</a>}</div>
-                  <div className="review-copy"><p>{item.why_nominate}</p></div>
-                  <div className="admin-actions"><button onClick={() => void publishNomination(item)} type="button">Publish</button><button onClick={() => void publishNomination(item, true)} type="button">Publish + feature</button><button onClick={() => draftFromNomination(item)} type="button">Open as draft</button></div>
-                </article>
-              ))}
-              {approvedApplications.map((app) => (
-                <article className="review-row" key={`approved-application-${app.id}`}>
-                  <div className="review-person"><strong>{app.name}</strong><span>{app.role} · {app.category}</span><small>{app.reviewed_by ? `Recommended by ${reviewerName.get(app.reviewed_by) || 'reviewer'}` : 'Approved self-submission'}</small></div>
-                  <div className="review-links"><a href={app.primary_url} target="_blank" rel="noreferrer">Primary work ↗</a>{app.secondary_url && <a href={app.secondary_url} target="_blank" rel="noreferrer">Second ↗</a>}</div>
-                  <div className="review-copy"><p>{app.current_focus || app.note || 'No additional context provided.'}</p></div>
-                  <div className="admin-actions"><button onClick={() => void publishApplication(app)} type="button">Publish</button><button onClick={() => void publishApplication(app, true)} type="button">Publish + feature</button><button onClick={() => draftFromApplication(app)} type="button">Open as draft</button></div>
-                </article>
-              ))}
+        <section className="admin-workspace">
+          <header className="admin-workspace-head">
+            <div>
+              <span className="kicker">{currentMeta.eyebrow}</span>
+              <h1>{currentMeta.title}</h1>
+              <p>{currentMeta.description}</p>
             </div>
-          </section>
-        )}
-
-        {isAdmin && <>
-          <section className="admin-section">
-            <div className="admin-section-title"><div><span className="kicker">INDEX</span><h2>People</h2></div><button className="button button-dark" type="button" onClick={() => setEditingPerson({ ...emptyPerson })}>+ Add person</button></div>
-            <div className="admin-list people-admin-list">
-              {people.map((person) => (
-                <article className="person-admin-row" key={person.id}>
-                  <div><strong>{person.display_name}</strong><span>{person.role} · {person.category}</span></div>
-                  <span className={`status-pill status-${person.status}`}>{person.status}</span>
-                  <span className={person.is_featured ? 'feature-state is-featured' : 'feature-state'}>{person.is_featured ? '★ Featured' : 'Not featured'}</span>
-                  <div className="row-buttons"><button type="button" onClick={() => void toggleFeatured(person)}>{person.is_featured ? 'Unfeature' : 'Feature'}</button><button type="button" onClick={() => setEditingPerson(person)}>Edit</button></div>
-                </article>
-              ))}
+            <div className="admin-workspace-head-actions">
+              {activeSection === 'people' && isAdmin && <button className="button button-dark" type="button" onClick={() => setEditingPerson({ ...emptyPerson })}>+ Add person</button>}
+              {activeSection === 'reviewers' && isAdmin && <><Link className="admin-text-link" to="/review-panel">Public panel ↗</Link><button className="button button-dark" type="button" onClick={() => openReviewer()}>+ Add reviewer</button></>}
+              {activeSection === 'journal' && isAdmin && <><Link className="admin-text-link" to="/journal">Public journal ↗</Link><button className="button button-dark" type="button" onClick={() => setEditingJournal({ ...emptyJournal })}>+ Write entry</button></>}
             </div>
-          </section>
+          </header>
 
-          <section className="admin-section">
-            <div className="admin-section-title"><div><span className="kicker">TRANSPARENCY</span><h2>Review Panel</h2></div><div className="section-title-actions"><Link to="/review-panel">Public page ↗</Link><button className="button button-dark" type="button" onClick={() => openReviewer()}>+ Add reviewer</button></div></div>
-            <div className="admin-panel-explainer">Add the reviewer here first using the email they will use for access. They can then create or log into an account at <code>/admin</code>; their account is automatically linked to this reviewer record.</div>
-            <div className="admin-list reviewer-admin-list">
-              {reviewers.length === 0 && <div className="admin-empty">No reviewers added yet.</div>}
-              {reviewers.map((reviewer) => {
-                const access = reviewerAccess.find((item) => item.reviewer_id === reviewer.id)
-                return (
-                  <article className="reviewer-admin-row" key={reviewer.id}>
-                    <div><strong>{reviewer.display_name}</strong><span>{reviewer.title}</span><small>{access?.email || 'No access email'}</small></div>
-                    <span className={reviewer.is_active ? 'access-state is-connected' : 'access-state'}>{reviewer.is_active ? 'Active' : 'Inactive'}</span>
-                    <span className={access?.user_id ? 'access-state is-connected' : 'access-state'}>{access?.user_id ? 'Account connected' : 'Awaiting account'}</span>
-                    <span className={reviewer.is_public ? 'access-state is-public' : 'access-state'}>{reviewer.is_public ? 'Public profile' : 'Hidden profile'}</span>
-                    <div className="row-buttons"><button type="button" onClick={() => openReviewer(reviewer)}>Edit</button></div>
+          {notice && <div className="admin-notice">{notice}</div>}
+          {dataError && <div className="admin-notice admin-notice-error">Database: {dataError}</div>}
+
+          <div className="admin-content-panel">
+            {activeSection === 'overview' && (
+              <div className="admin-overview-view">
+                <div className="admin-stat-grid">
+                  <button type="button" className="stat-blue" onClick={() => setActiveSection('applications')}><span>Self submissions</span><strong>{pendingApplications.length}</strong><small>waiting for review</small></button>
+                  <button type="button" className="stat-red" onClick={() => setActiveSection('nominations')}><span>Nominations</span><strong>{pendingNominations.length}</strong><small>waiting for review</small></button>
+                  <button type="button" className="stat-mint" onClick={() => setActiveSection('recommended')}><span>Recommended</span><strong>{recommendedCount}</strong><small>awaiting editorial decision</small></button>
+                  {isAdmin ? <button type="button" className="stat-lilac" onClick={() => setActiveSection('people')}><span>Published</span><strong>{publishedCount}</strong><small>{featuredCount} featured on homepage</small></button> : <div className="admin-stat-static stat-lilac"><span>Your role</span><strong>Reviewer</strong><small>recommend or decline</small></div>}
+                </div>
+
+                <div className="admin-overview-grid">
+                  <section className="admin-overview-block">
+                    <div className="admin-mini-heading"><span>QUEUE</span><strong>Needs attention</strong></div>
+                    <button type="button" onClick={() => setActiveSection('applications')}><span>Self submissions</span><b>{pendingApplications.length}</b></button>
+                    <button type="button" onClick={() => setActiveSection('nominations')}><span>Nominations</span><b>{pendingNominations.length}</b></button>
+                    <button type="button" onClick={() => setActiveSection('recommended')}><span>Recommended</span><b>{recommendedCount}</b></button>
+                  </section>
+                  {isAdmin && <section className="admin-overview-block admin-overview-editorial">
+                    <div className="admin-mini-heading"><span>PUBLISHING</span><strong>Editorial inventory</strong></div>
+                    <button type="button" onClick={() => setActiveSection('people')}><span>People / Index</span><b>{people.length}</b></button>
+                    <button type="button" onClick={() => setActiveSection('reviewers')}><span>Active reviewers</span><b>{activeReviewerCount}</b></button>
+                    <button type="button" onClick={() => setActiveSection('journal')}><span>Journal entries</span><b>{journalEntries.length}</b></button>
+                  </section>}
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'applications' && (
+              <div className="admin-list admin-list-standalone">
+                {pendingApplications.length === 0 && <div className="admin-empty">Nothing waiting here.</div>}
+                {pendingApplications.map((app) => (
+                  <article className="review-row" key={app.id}>
+                    <div className="review-person"><strong>{app.name}</strong><span>{app.role} · {app.category}</span>{(app.location || app.timezone) && <small>{[app.location, app.timezone].filter(Boolean).join(' · ')}</small>}</div>
+                    <div className="review-links"><a href={app.primary_url} target="_blank" rel="noreferrer">Primary work ↗</a>{app.secondary_url && <a href={app.secondary_url} target="_blank" rel="noreferrer">Second ↗</a>}{app.tertiary_url && <a href={app.tertiary_url} target="_blank" rel="noreferrer">Third ↗</a>}</div>
+                    <div className="review-copy"><p>{app.current_focus || app.note || 'No additional context provided.'}</p></div>
+                    <div className="admin-actions">
+                      {isAdmin ? <><button onClick={() => void publishApplication(app)} type="button">Approve &amp; publish</button><button onClick={() => void publishApplication(app, true)} type="button">Approve + feature</button><button onClick={() => draftFromApplication(app)} type="button">Create draft</button><button className="danger" onClick={() => void updateReviewStatus('applications', app.id, 'rejected')} type="button">Reject</button></> : <><button onClick={() => void updateReviewStatus('applications', app.id, 'approved')} type="button">Recommend</button><button className="danger" onClick={() => void updateReviewStatus('applications', app.id, 'rejected')} type="button">Decline</button></>}
+                    </div>
                   </article>
-                )
-              })}
-            </div>
-          </section>
+                ))}
+              </div>
+            )}
 
-          <section className="admin-section">
-            <div className="admin-section-title"><div><span className="kicker">EDITORIAL</span><h2>Journal</h2></div><div className="section-title-actions"><Link to="/journal">Public journal ↗</Link><button className="button button-dark" type="button" onClick={() => setEditingJournal({ ...emptyJournal })}>+ Write entry</button></div></div>
-            <div className="admin-list journal-admin-list">
-              {journalEntries.length === 0 && <div className="admin-empty">No journal entries yet.</div>}
-              {journalEntries.map((entry) => (
-                <article className="journal-admin-row" key={entry.id}>
-                  <div><strong>{entry.title}</strong><span>{entry.author_name}</span><small>{entry.excerpt}</small></div>
-                  <span className={`status-pill status-${entry.status}`}>{entry.status}</span>
-                  <span className="journal-admin-date">{entry.published_at ? new Date(entry.published_at).toLocaleDateString() : 'Not published'}</span>
-                  <div className="row-buttons">{entry.status === 'published' && <Link to={`/journal/${entry.slug}`}>View ↗</Link>}<button type="button" onClick={() => setEditingJournal(entry)}>Edit</button></div>
-                </article>
-              ))}
-            </div>
-          </section>
-        </>}
-      </section>
+            {activeSection === 'nominations' && (
+              <div className="admin-list admin-list-standalone">
+                {pendingNominations.length === 0 && <div className="admin-empty">No nominations are waiting for review.</div>}
+                {pendingNominations.map((item) => (
+                  <article className="review-row" key={item.id}>
+                    <div className="review-person"><strong>{item.nominee_name}</strong><span>{item.nominee_role} · {item.category}</span><small>Nominated by {item.nominator_name}{item.relationship ? ` · ${item.relationship}` : ''}</small></div>
+                    <div className="review-links"><a href={item.primary_url} target="_blank" rel="noreferrer">Primary work ↗</a>{item.secondary_url && <a href={item.secondary_url} target="_blank" rel="noreferrer">Second ↗</a>}</div>
+                    <div className="review-copy"><p>{item.why_nominate}</p></div>
+                    <div className="admin-actions">
+                      {isAdmin ? <><button onClick={() => void publishNomination(item)} type="button">Approve &amp; publish</button><button onClick={() => void publishNomination(item, true)} type="button">Approve + feature</button><button onClick={() => draftFromNomination(item)} type="button">Create draft</button><button className="danger" onClick={() => void updateReviewStatus('nominations', item.id, 'rejected')} type="button">Reject</button></> : <><button onClick={() => void updateReviewStatus('nominations', item.id, 'approved')} type="button">Recommend</button><button className="danger" onClick={() => void updateReviewStatus('nominations', item.id, 'rejected')} type="button">Decline</button></>}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
 
+            {activeSection === 'recommended' && (
+              <div className="admin-list admin-list-standalone">
+                {recommendedCount === 0 && <div className="admin-empty">Nothing has been recommended yet.</div>}
+                {approvedNominations.map((item) => (
+                  <article className="review-row" key={`approved-nomination-${item.id}`}>
+                    <div className="review-person"><strong>{item.nominee_name}</strong><span>{item.nominee_role} · {item.category}</span><small>{item.reviewed_by ? `Recommended by ${reviewerName.get(item.reviewed_by) || 'reviewer'}` : 'Approved nomination'} · {item.nominator_name}</small></div>
+                    <div className="review-links"><a href={item.primary_url} target="_blank" rel="noreferrer">Primary work ↗</a>{item.secondary_url && <a href={item.secondary_url} target="_blank" rel="noreferrer">Second ↗</a>}</div>
+                    <div className="review-copy"><p>{item.why_nominate}</p></div>
+                    <div className="admin-actions">{isAdmin ? <><button onClick={() => void publishNomination(item)} type="button">Publish</button><button onClick={() => void publishNomination(item, true)} type="button">Publish + feature</button><button onClick={() => draftFromNomination(item)} type="button">Open as draft</button></> : <span className="review-handoff">Waiting for editorial decision</span>}</div>
+                  </article>
+                ))}
+                {approvedApplications.map((app) => (
+                  <article className="review-row" key={`approved-application-${app.id}`}>
+                    <div className="review-person"><strong>{app.name}</strong><span>{app.role} · {app.category}</span><small>{app.reviewed_by ? `Recommended by ${reviewerName.get(app.reviewed_by) || 'reviewer'}` : 'Approved self-submission'}</small></div>
+                    <div className="review-links"><a href={app.primary_url} target="_blank" rel="noreferrer">Primary work ↗</a>{app.secondary_url && <a href={app.secondary_url} target="_blank" rel="noreferrer">Second ↗</a>}</div>
+                    <div className="review-copy"><p>{app.current_focus || app.note || 'No additional context provided.'}</p></div>
+                    <div className="admin-actions">{isAdmin ? <><button onClick={() => void publishApplication(app)} type="button">Publish</button><button onClick={() => void publishApplication(app, true)} type="button">Publish + feature</button><button onClick={() => draftFromApplication(app)} type="button">Open as draft</button></> : <span className="review-handoff">Waiting for editorial decision</span>}</div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            {activeSection === 'people' && isAdmin && (
+              <div className="admin-list admin-list-standalone people-admin-list">
+                {people.length === 0 && <div className="admin-empty">No people in the index yet.</div>}
+                {people.map((person) => (
+                  <article className="person-admin-row" key={person.id}>
+                    <div><strong>{person.display_name}</strong><span>{person.role} · {person.category}</span></div>
+                    <span className={`status-pill status-${person.status}`}>{person.status}</span>
+                    <span className={person.is_featured ? 'feature-state is-featured' : 'feature-state'}>{person.is_featured ? '★ Featured' : 'Not featured'}</span>
+                    <div className="row-buttons"><button type="button" onClick={() => void toggleFeatured(person)}>{person.is_featured ? 'Unfeature' : 'Feature'}</button><button type="button" onClick={() => setEditingPerson(person)}>Edit</button></div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            {activeSection === 'reviewers' && isAdmin && (
+              <div>
+                <div className="admin-panel-explainer">Add the reviewer here first using the email they will use for access. They can then create or log into an account at <code>/admin</code>; their account is automatically linked to this reviewer record.</div>
+                <div className="admin-list admin-list-standalone reviewer-admin-list">
+                  {reviewers.length === 0 && <div className="admin-empty">No reviewers added yet.</div>}
+                  {reviewers.map((reviewer) => {
+                    const access = reviewerAccess.find((item) => item.reviewer_id === reviewer.id)
+                    return (
+                      <article className="reviewer-admin-row" key={reviewer.id}>
+                        <div><strong>{reviewer.display_name}</strong><span>{reviewer.title}</span><small>{access?.email || 'No access email'}</small></div>
+                        <span className={reviewer.is_active ? 'access-state is-connected' : 'access-state'}>{reviewer.is_active ? 'Active' : 'Inactive'}</span>
+                        <span className={access?.user_id ? 'access-state is-connected' : 'access-state'}>{access?.user_id ? 'Account connected' : 'Awaiting account'}</span>
+                        <span className={reviewer.is_public ? 'access-state is-public' : 'access-state'}>{reviewer.is_public ? 'Public profile' : 'Hidden profile'}</span>
+                        <div className="row-buttons"><button type="button" onClick={() => openReviewer(reviewer)}>Edit</button></div>
+                      </article>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'journal' && isAdmin && (
+              <div className="admin-list admin-list-standalone journal-admin-list">
+                {journalEntries.length === 0 && <div className="admin-empty">No journal entries yet.</div>}
+                {journalEntries.map((entry) => (
+                  <article className="journal-admin-row" key={entry.id}>
+                    <div><strong>{entry.title}</strong><span>{entry.author_name}</span><small>{entry.excerpt}</small></div>
+                    <span className={`status-pill status-${entry.status}`}>{entry.status}</span>
+                    <span className="journal-admin-date">{entry.published_at ? new Date(entry.published_at).toLocaleDateString() : 'Not published'}</span>
+                    <div className="row-buttons">{entry.status === 'published' && <Link to={`/journal/${entry.slug}`}>View ↗</Link>}<button type="button" onClick={() => setEditingJournal(entry)}>Edit</button></div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
       {editingPerson && isAdmin && (
         <div className="editor-backdrop" role="presentation">
           <form className="person-editor" onSubmit={savePerson}>
@@ -594,7 +688,7 @@ export default function AdminPage() {
             <div className="editor-grid">
               <label className="full">Title<input value={editingJournal.title ?? ''} onChange={(e) => setEditingJournal({ ...editingJournal, title: e.target.value, slug: editingJournal.id ? editingJournal.slug : slugify(e.target.value) })} required /></label>
               <label>Slug<input value={editingJournal.slug ?? ''} onChange={(e) => setEditingJournal({ ...editingJournal, slug: e.target.value })} required /></label>
-              <label>Byline<input value={editingJournal.author_name ?? 'ivansays Editorial'} onChange={(e) => setEditingJournal({ ...editingJournal, author_name: e.target.value })} required /></label>
+              <label>Byline<input value={editingJournal.author_name ?? 'IvanSays Editorial'} onChange={(e) => setEditingJournal({ ...editingJournal, author_name: e.target.value })} required /></label>
               <label className="full">Excerpt<textarea rows={3} value={editingJournal.excerpt ?? ''} onChange={(e) => setEditingJournal({ ...editingJournal, excerpt: e.target.value })} placeholder="Short summary shown on the Journal index." required /></label>
               <label className="full">Entry<textarea className="journal-body-editor" rows={18} value={editingJournal.body ?? ''} onChange={(e) => setEditingJournal({ ...editingJournal, body: e.target.value })} placeholder="Write the entry here. Blank lines are preserved." required /></label>
               <label>Status<select value={editingJournal.status ?? 'draft'} onChange={(e) => setEditingJournal({ ...editingJournal, status: e.target.value as JournalStatus })}><option value="draft">Draft</option><option value="published">Published</option></select></label>

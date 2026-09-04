@@ -34,7 +34,7 @@ export default function JournalPage() {
         <header className="page-heading compact-heading">
           <span className="kicker">JOURNAL</span>
           <h1>Notes from the directory.</h1>
-          <p>Profiles, interviews, project notes, and occasional observations from the people around ivansays.</p>
+          <p>Profiles, interviews, project notes, and occasional observations from the people around IvanSays.</p>
         </header>
 
         {loading ? (

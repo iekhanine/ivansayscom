@@ -10,12 +10,26 @@ function categoryLabel(category: Person['category']) {
   return category[0].toUpperCase() + category.slice(1)
 }
 
-function initials(name: string) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('')
-}
-
 function firstLink(person: Person) {
   return person.portfolio_url || person.website_url || person.github_url || person.contact_url
+}
+
+const categoryImage: Record<Person['category'], { src: string; alt: string; credit: string }> = {
+  developer: {
+    src: 'https://images.unsplash.com/photo-1607799279861-4dd421887fb3?auto=format&fit=crop&w=1800&q=80',
+    alt: 'A dark computer display filled with colorful code.',
+    credit: 'Editorial image · Unsplash',
+  },
+  creator: {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Camera_-_Desk_-_Computer_-_Notepad_-_Life_%28Unsplash%29.jpg/1280px-Camera_-_Desk_-_Computer_-_Notepad_-_Life_%28Unsplash%29.jpg',
+    alt: 'A camera and notebook arranged on a creative desk.',
+    credit: 'Editorial image · CC0 / Wikimedia Commons',
+  },
+  artist: {
+    src: 'https://images.unsplash.com/photo-1650413890515-68dc18d68c2b?auto=format&fit=crop&w=1800&q=80',
+    alt: 'A vivid abstract painting with red, turquoise, blue, and yellow.',
+    credit: 'Editorial image · Unsplash',
+  },
 }
 
 export default function HomePage() {
@@ -65,38 +79,44 @@ export default function HomePage() {
   }, [loadHome])
 
   const lead = featured[0]
+  const leadImage = lead ? categoryImage[lead.category] : categoryImage.creator
 
   return (
     <main>
       <SiteHeader />
 
-      <div className="shell home-page">
-        <section className="home-intro">
+      <div className="shell home-page magazine-home">
+        <section className="home-intro magazine-intro">
           <div>
-            <span className="kicker">CURATED DIRECTORY</span>
-            <p>Independent developers, creators, and artists doing work worth seeing.</p>
+            <span className="kicker">THE CURRENT EDITION</span>
+            <p>A selective directory of independent people making thoughtful, useful, original work.</p>
           </div>
-          <Link to="/directory">Browse everyone <span>→</span></Link>
+          <div className="edition-stamp">
+            <span>ISSUE 01</span>
+            <b>2026</b>
+          </div>
         </section>
 
-        {!loading && lead && (
-          <section className={`featured-profile category-${lead.category}`}>
-            <div className="featured-profile-label">
-              <span>Featured</span>
-              <span>{categoryLabel(lead.category)}</span>
+        {!loading && lead ? (
+          <section className={`cover-feature category-${lead.category}`}>
+            <div className="cover-feature-image">
+              <img src={leadImage.src} alt={leadImage.alt} />
+              <span className="image-credit">{leadImage.credit}</span>
+              <span className="cover-tab">FEATURED / {categoryLabel(lead.category).toUpperCase()}</span>
             </div>
-            <div className="featured-profile-main">
-              <div className="featured-monogram" aria-hidden="true">{lead.monogram || initials(lead.display_name)}</div>
-              <div className="featured-person-copy">
-                <h1>{lead.display_name}</h1>
-                <p className="featured-role">{lead.role}</p>
-                <p className="featured-description">{lead.featured_note || lead.bio}</p>
-                <div className="featured-skills">
-                  {lead.skills.slice(0, 5).map((skill) => <span key={skill}>{skill}</span>)}
-                </div>
+            <div className="cover-feature-copy">
+              <div className="cover-meta">
+                <span>EDITORIAL SELECTION</span>
+                <span>#{String(Math.max(1, lead.featured_order)).padStart(2, '0')}</span>
               </div>
-              <div className="featured-profile-action">
-                {firstLink(lead) && <a href={firstLink(lead) ?? undefined} target="_blank" rel="noreferrer">View work ↗</a>}
+              <h1>{lead.display_name}</h1>
+              <p className="cover-role">{lead.role}</p>
+              <p className="cover-description">{lead.featured_note || lead.bio}</p>
+              <div className="featured-skills">
+                {lead.skills.slice(0, 5).map((skill) => <span key={skill}>{skill}</span>)}
+              </div>
+              <div className="cover-actions">
+                {firstLink(lead) && <a className="button button-dark" href={firstLink(lead) ?? undefined} target="_blank" rel="noreferrer">See the work ↗</a>}
                 <span className={`availability availability-${lead.availability}`}>
                   <i aria-hidden="true" />
                   {lead.availability === 'available' ? 'Available' : lead.availability === 'limited' ? 'Limited availability' : 'Not currently available'}
@@ -104,12 +124,18 @@ export default function HomePage() {
               </div>
             </div>
           </section>
-        )}
+        ) : !loading ? (
+          <section className="cover-feature cover-feature-empty">
+            <div className="cover-feature-image"><img src={categoryImage.artist.src} alt={categoryImage.artist.alt} /></div>
+            <div className="cover-feature-copy"><span className="kicker">FIRST EDITION</span><h1>The cover is open.</h1><p className="cover-description">Featured work will live here as the directory grows.</p><Link className="button button-dark" to="/nominate">Nominate someone</Link></div>
+          </section>
+        ) : null}
 
         {!loading && featured.length > 1 && (
-          <section className="home-section">
-            <div className="section-heading">
-              <div><span className="kicker">FEATURED</span><h2>Worth a closer look</h2></div>
+          <section className="home-section magazine-section">
+            <div className="section-heading magazine-section-heading">
+              <div><span className="kicker">ALSO FEATURED</span><h2>Three people we think you should click on.</h2></div>
+              <span className="section-number">01</span>
             </div>
             <div className="home-card-grid home-card-grid-small">
               {featured.slice(1).map((person) => <PersonCard key={person.id} person={person} compact />)}
@@ -117,15 +143,36 @@ export default function HomePage() {
           </section>
         )}
 
-        <section className="home-section">
-          <div className="section-heading">
-            <div><span className="kicker">RECENTLY SELECTED</span><h2>New to the directory</h2></div>
-            <Link to="/directory">View directory →</Link>
+        <section className="department-grid" aria-label="Browse by discipline">
+          <Link className="department-card department-developer" to="/directory?category=developer">
+            <div className="department-image"><img src={categoryImage.developer.src} alt="" /></div>
+            <span className="department-no">01</span>
+            <div><small>DEPARTMENT</small><strong>Developers</strong><p>Code, infrastructure, systems, products.</p></div>
+            <b>Explore →</b>
+          </Link>
+          <Link className="department-card department-creator" to="/directory?category=creator">
+            <div className="department-image"><img src={categoryImage.creator.src} alt="" /></div>
+            <span className="department-no">02</span>
+            <div><small>DEPARTMENT</small><strong>Creators</strong><p>Video, writing, media, storytelling.</p></div>
+            <b>Explore →</b>
+          </Link>
+          <Link className="department-card department-artist" to="/directory?category=artist">
+            <div className="department-image"><img src={categoryImage.artist.src} alt="" /></div>
+            <span className="department-no">03</span>
+            <div><small>DEPARTMENT</small><strong>Artists</strong><p>Visual, sound, physical, experimental work.</p></div>
+            <b>Explore →</b>
+          </Link>
+        </section>
+
+        <section className="home-section magazine-section recent-section">
+          <div className="section-heading magazine-section-heading">
+            <div><span className="kicker">THE INDEX</span><h2>Recently selected</h2></div>
+            <Link to="/directory">See the full directory →</Link>
           </div>
           {loading ? (
             <div className="loading-panel">Loading selections…</div>
           ) : recent.length ? (
-            <div className="home-card-grid">
+            <div className="home-card-grid magazine-card-grid">
               {recent.map((person) => <PersonCard key={person.id} person={person} compact />)}
             </div>
           ) : (
@@ -136,28 +183,16 @@ export default function HomePage() {
           )}
         </section>
 
-        <section className="browse-categories" aria-label="Browse by discipline">
-          <Link to="/directory?category=developer"><span>Developers</span><small>Code, systems, products</small><b>→</b></Link>
-          <Link to="/directory?category=creator"><span>Creators</span><small>Video, writing, media</small><b>→</b></Link>
-          <Link to="/directory?category=artist"><span>Artists</span><small>Visual, sound, physical work</small><b>→</b></Link>
-        </section>
-
-        <section className="home-participate">
+        <section className="editorial-callout">
+          <div className="editorial-callout-mark">IS</div>
           <div>
-            <span className="kicker">KNOW GOOD WORK?</span>
-            <h2>Help us find people worth adding.</h2>
+            <span className="kicker">HELP SHAPE THE NEXT EDITION</span>
+            <h2>Know someone whose work deserves a closer look?</h2>
+            <p>Nominations and self-submissions go through human review. Inclusion and homepage features are editorial, never purchased.</p>
           </div>
-          <div className="participate-actions">
-            <Link className="participate-card" to="/nominate">
-              <strong>Nominate someone</strong>
-              <span>Recommend a developer, creator, or artist for review.</span>
-              <b>Nominate →</b>
-            </Link>
-            <Link className="participate-card" to="/apply">
-              <strong>Submit your own work</strong>
-              <span>Put your work in front of the review team.</span>
-              <b>Submit →</b>
-            </Link>
+          <div className="editorial-callout-actions">
+            <Link className="button button-light" to="/nominate">Nominate someone</Link>
+            <Link className="button button-accent" to="/apply">Submit your work</Link>
           </div>
         </section>
       </div>

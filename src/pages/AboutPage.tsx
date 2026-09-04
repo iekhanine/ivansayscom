@@ -10,7 +10,7 @@ export default function AboutPage() {
         <header className="page-heading compact-heading">
           <span className="kicker">ABOUT</span>
           <h1>A small directory with human judgment.</h1>
-          <p>ivansays collects developers, creators, and artists whose work is worth a closer look.</p>
+          <p>IvanSays collects developers, creators, and artists whose work is worth a closer look.</p>
         </header>
 
         <section className="content-grid">
