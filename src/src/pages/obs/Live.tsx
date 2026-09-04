@@ -66,7 +66,7 @@ export default function Live({
         <div className="submission-rule" />
         <div className="submission-footer">
           <span>SUBMITTED VIA</span>
-          <strong>IVANSAYS.COM</strong>
+          <strong>ivansays.COM</strong>
         </div>
       </section>
     </main>

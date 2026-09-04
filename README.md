@@ -1,32 +1,65 @@
-# React + TypeScript + Vite
+# ivansays — curated people worth knowing
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A deliberately small directory of developers, creators, and artists personally curated by Ivan.
 
-Currently, two official plugins are available:
+## Product rules
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Public visitors can browse/search/filter published people.
+- Anyone can submit work for review.
+- Submission does **not** create a public profile.
+- Only an admin can create, edit, publish, archive, or reorder directory entries.
+- No profile photos are required or supported by the MVP.
+- Listings are editorial, not pay-to-play.
 
-## React Compiler
+## Supabase
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+This starter is wired to:
 
-## Expanding the Oxlint configuration
+`https://aseauwtflvscetakpscc.supabase.co`
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+The client uses the Supabase publishable key via `.env.local`. A publishable key is appropriate in browser code; authorization is enforced by RLS, not by hiding that key.
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+### 1. Create the database
+
+Open Supabase → SQL Editor and run:
+
+`supabase/schema.sql`
+
+### 2. Create Ivan's admin login
+
+In Supabase → Authentication → Users, create the email/password account you want to use at `/admin`.
+
+Copy that user's UUID and run:
+
+```sql
+insert into public.admins (user_id)
+values ('YOUR-AUTH-USER-UUID');
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Do not add public signup UI. The admin allow-list in `public.admins` is what authorizes curation writes.
+
+### 3. Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+Routes:
+
+- `/` — public directory
+- `/apply` — application form
+- `/admin` — private curation desk
+
+## Deploy
+
+For Vercel, add these environment variables to the project:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+Then deploy normally.
+
+## Before public launch
+
+The public application policy intentionally permits anonymous inserts. The form has a simple honeypot, but production abuse protection should eventually move submission through a Supabase Edge Function or another server-side endpoint with rate limiting / Turnstile. The directory itself is already protected by RLS.
