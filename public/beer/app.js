@@ -1,88 +1,52 @@
 (() => {
-  const config = window.BEER_APP_CONFIG || {};
-  const publicUrl = config.publicUrl || "https://ivansays.com/beer";
-  const stripePaymentLink = config.stripePaymentLink || "";
+  const cfg = window.BEER_APP_CONFIG || {};
+  const publicUrl = cfg.publicUrl || "https://ivansays.com/beer";
+  const link = cfg.squarePaymentLink || "";
+  const pay = document.getElementById("payButton");
+  const status = document.getElementById("status");
+  const install = document.getElementById("installButton");
 
-  const tipButton = document.getElementById("tipButton");
-  const shareButton = document.getElementById("shareButton");
-  const copyButton = document.getElementById("copyButton");
-  const installButton = document.getElementById("installButton");
-  const statusMessage = document.getElementById("statusMessage");
-
-  const showStatus = (message) => {
-    statusMessage.textContent = message;
-    window.setTimeout(() => {
-      if (statusMessage.textContent === message) statusMessage.textContent = "";
-    }, 2800);
-  };
-
-  const ready =
-    stripePaymentLink &&
-    !stripePaymentLink.includes("REPLACE_WITH_YOUR_PAYMENT_LINK");
-
+  const ready = link && !link.includes("REPLACE_WITH_YOUR_SQUARE_LINK");
   if (ready) {
-    tipButton.href = stripePaymentLink;
-    tipButton.target = "_blank";
+    pay.href = link;
+    pay.target = "_blank";
+    pay.rel = "noopener noreferrer";
   } else {
-    tipButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      showStatus("Stripe payment link has not been configured yet.");
-    });
+    pay.onclick = (e) => {
+      e.preventDefault();
+      status.textContent = "Add your Square Payment Link in /beer/config.js.";
+    };
   }
 
-  shareButton.addEventListener("click", async () => {
-    const shareData = {
-      title: "Buy Ivan a Beer",
-      text: "Tip Ivan for internet nonsense.",
-      url: publicUrl
-    };
+  document.getElementById("copyButton").onclick = async () => {
+    await navigator.clipboard.writeText(publicUrl);
+    status.textContent = "Copied: " + publicUrl;
+  };
 
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(publicUrl);
-        showStatus("Link copied.");
-      }
-    } catch (error) {
-      if (error && error.name !== "AbortError") showStatus("Could not share the link.");
-    }
-  });
-
-  copyButton.addEventListener("click", async () => {
-    try {
+  document.getElementById("shareButton").onclick = async () => {
+    if (navigator.share) {
+      try { await navigator.share({title:"Buy Ivan a Beer", text:"Tip Ivan on IvanSays.", url:publicUrl}); } catch {}
+    } else {
       await navigator.clipboard.writeText(publicUrl);
-      showStatus("Copied: " + publicUrl);
-    } catch {
-      showStatus(publicUrl);
+      status.textContent = "Link copied.";
     }
-  });
+  };
 
-  let deferredPrompt = null;
-
-  window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault();
-    deferredPrompt = event;
-    installButton.hidden = false;
+  let promptEvent;
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    promptEvent = e;
+    install.hidden = false;
   });
-
-  installButton.addEventListener("click", async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installButton.hidden = true;
-  });
-
-  window.addEventListener("appinstalled", () => {
-    deferredPrompt = null;
-    installButton.hidden = true;
-    showStatus("Installed.");
-  });
+  install.onclick = async () => {
+    if (!promptEvent) return;
+    promptEvent.prompt();
+    await promptEvent.userChoice;
+    install.hidden = true;
+    promptEvent = null;
+  };
 
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/beer/sw.js").catch(() => {});
-    });
+    window.addEventListener("load", () => navigator.serviceWorker.register("/beer/sw.js"));
   }
 })();
