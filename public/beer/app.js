@@ -33,7 +33,7 @@
   shareButton.addEventListener("click", async () => {
     const shareData = {
       title: "Buy Ivan a Beer",
-      text: "Tip Ivan for IvanSays content and assorted internet nonsense.",
+      text: "Tip Ivan for internet nonsense.",
       url: publicUrl
     };
 

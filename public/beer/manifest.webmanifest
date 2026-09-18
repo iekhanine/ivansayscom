@@ -1,7 +1,7 @@
 {
   "name": "Buy Ivan a Beer",
   "short_name": "Beer Ivan",
-  "description": "Tip Ivan for IvanSays content and assorted internet nonsense.",
+  "description": "Tip Ivan for internet nonsense.",
   "start_url": "/beer/",
   "scope": "/beer/",
   "display": "standalone",
