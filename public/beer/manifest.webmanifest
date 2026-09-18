@@ -1,0 +1,22 @@
+{
+  "name": "Buy Ivan a Beer",
+  "short_name": "Beer Ivan",
+  "description": "Tip Ivan for IvanSays content and assorted internet nonsense.",
+  "start_url": "/beer/",
+  "scope": "/beer/",
+  "display": "standalone",
+  "background_color": "#11100d",
+  "theme_color": "#11100d",
+  "icons": [
+    {
+      "src": "/beer/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/beer/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

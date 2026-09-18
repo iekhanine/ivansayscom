@@ -1,65 +1,62 @@
-# ivansays — curated people worth knowing
+# IvanSays — Buy Ivan a Beer
 
-A deliberately small directory of developers, creators, and artists personally curated by Ivan.
+A framework-independent mobile-first PWA intended for:
 
-## Product rules
+https://ivansays.com/beer
 
-- Public visitors can browse/search/filter published people.
-- Anyone can submit work for review.
-- Submission does **not** create a public profile.
-- Only an admin can create, edit, publish, archive, or reorder directory entries.
-- No profile photos are required or supported by the MVP.
-- Listings are editorial, not pay-to-play.
+## What it does
+- Mobile-first app-like page
+- Installable PWA on supported mobile browsers
+- Permanent share URL on ivansays.com
+- QR code points to ivansays.com/beer, not directly to Stripe
+- Stripe-hosted Checkout / Payment Link opens in a new browser tab
+- Share and Copy Link actions
+- No Stripe secrets or API keys in the frontend
 
-## Supabase
+## Stripe setup
+Use a Stripe Payment Link configured as **Customers choose what to pay**.
 
-This starter is wired to:
+Recommended:
+- Title: Tip Ivan
+- Description: A voluntary tip for IvanSays content, tools, and creative/technical work.
+- Suggested amount: $7
+- Minimum: $1
+- Maximum: $100
+- One-time payment only
 
-`https://aseauwtflvscetakpscc.supabase.co`
+Do not describe the Stripe transaction as the purchase or delivery of alcohol.
+The public site can use the playful “Buy Ivan a Beer” theme, while the actual
+payment remains a tip for content/services already provided.
 
-The client uses the Supabase publishable key via `.env.local`. A publishable key is appropriate in browser code; authorization is enforced by RLS, not by hiding that key.
+## Install
+Copy:
 
-### 1. Create the database
+public/beer/
 
-Open Supabase → SQL Editor and run:
+into your site's existing public directory.
 
-`supabase/schema.sql`
+Then edit:
 
-### 2. Create Ivan's admin login
+public/beer/config.js
 
-In Supabase → Authentication → Users, create the email/password account you want to use at `/admin`.
+and replace:
 
-Copy that user's UUID and run:
+https://buy.stripe.com/fZu5kCdpI69daNw3NI48002
 
-```sql
-insert into public.admins (user_id)
-values ('YOUR-AUTH-USER-UUID');
-```
+with the real Stripe Payment Link.
 
-Do not add public signup UI. The admin allow-list in `public.admins` is what authorizes curation writes.
+Deploy normally.
 
-### 3. Run locally
+## QR
+public/beer/beer-qr.png
 
-```bash
-npm install
-npm run dev
-```
+points to:
 
-Routes:
+https://ivansays.com/beer
 
-- `/` — public directory
-- `/apply` — application form
-- `/admin` — private curation desk
+Keep that URL permanent. If Stripe changes later, only config.js changes.
 
-## Deploy
 
-For Vercel, add these environment variables to the project:
+## Live Stripe Payment Link
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_PUBLISHABLE_KEY`
-
-Then deploy normally.
-
-## Before public launch
-
-The public application policy intentionally permits anonymous inserts. The form has a simple honeypot, but production abuse protection should eventually move submission through a Supabase Edge Function or another server-side endpoint with rate limiting / Turnstile. The directory itself is already protected by RLS.
+`https://buy.stripe.com/fZu5kCdpI69daNw3NI48002`
